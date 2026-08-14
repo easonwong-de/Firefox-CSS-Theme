@@ -28,6 +28,7 @@ export class FirefoxBrowserManager {
 		if (this.driverInstance) return;
 
 		const firefoxOptions = new firefox.Options();
+		firefoxOptions.addArguments("-remote-allow-system-access");
 		firefoxOptions.setPreference("devtools.chrome.enabled", true);
 		firefoxOptions.setPreference("devtools.debugger.remote-enabled", true);
 		firefoxOptions.setPreference(
