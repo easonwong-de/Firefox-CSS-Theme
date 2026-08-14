@@ -1,0 +1,26 @@
+{
+	"name": "firefox-css-theme-mcp",
+	"version": "0.1.0",
+	"description": "Model Context Protocol server for inspecting and live-debugging Firefox UI DOM and CSS themes.",
+	"type": "module",
+	"main": "dist/index.js",
+	"bin": {
+		"firefox-css-theme-mcp": "./dist/index.js"
+	},
+	"scripts": {
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"format": "prettier --write --list-different ."
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.30.0",
+		"selenium-webdriver": "^4.47.0",
+		"zod": "^4.4.3"
+	},
+	"devDependencies": {
+		"@types/node": "^26.2.0",
+		"@types/selenium-webdriver": "^4.35.6",
+		"prettier": "^3.9.6",
+		"typescript": "^7.0.2"
+	}
+}
