@@ -8,14 +8,17 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/easonwong-de/Firefox-CSS-Theme-MCP.git"
+		"url": "git+https://github.com/easonwong-de/Firefox-CSS-Theme-MCP.git"
 	},
 	"author": "Eason Wong <me@easonwong.de> (https://easonwong.de/)",
 	"type": "module",
 	"main": "dist/index.js",
 	"bin": {
-		"firefox-css-theme-mcp": "./dist/index.js"
+		"firefox-css-theme-mcp": "dist/index.js"
 	},
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"build": "tsc",
 		"format": "prettier --write --list-different .",

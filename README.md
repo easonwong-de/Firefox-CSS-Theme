@@ -8,11 +8,59 @@ Model Context Protocol (MCP) server for inspecting, querying, and live-debugging
 - Firefox Browser
 - `geckodriver` available on your `PATH` or managed via Selenium
 
-## Installation & Build
+## Installation & Usage
+
+### Option A — CLI (Claude Code / Codex)
+
+#### Claude Code
 
 ```bash
+claude mcp add firefox-css-theme -- npx -y firefox-css-theme-mcp
+```
+
+#### Codex
+
+```bash
+codex mcp add firefox-css-theme -- npx -y firefox-css-theme-mcp
+```
+
+### Option B — IDE Configuration
+
+Add the server configuration to your MCP settings file:
+
+```json
+{
+	"mcpServers": {
+		"firefox-css-theme": {
+			"command": "npx",
+			"args": ["-y", "firefox-css-theme-mcp"]
+		}
+	}
+}
+```
+
+### Option C — From Source
+
+1. Clone the repository and build the project:
+
+```bash
+git clone https://github.com/easonwong-de/Firefox-CSS-Theme-MCP.git
+cd Firefox-CSS-Theme-MCP
 npm install
 npm run build
+```
+
+2. Add the local build to your MCP configuration:
+
+```json
+{
+	"mcpServers": {
+		"firefox-css-theme": {
+			"command": "node",
+			"args": ["/path/to/Firefox-CSS-Theme-MCP/dist/index.js"]
+		}
+	}
+}
 ```
 
 ## Available MCP Tools
@@ -26,16 +74,3 @@ npm run build
 - `remove_theme_css`: Removes an injected stylesheet.
 - `take_ui_screenshot`: Captures a screenshot of the browser window or a specific UI component.
 - `execute_chrome_javascript`: Runs privileged JavaScript in the browser chrome window context.
-
-## MCP Client Configuration
-
-```json
-{
-	"mcpServers": {
-		"firefox-css-theme": {
-			"command": "node",
-			"args": ["/path/to/firefox-css-theme-mcp/dist/index.js"]
-		}
-	}
-}
-```
