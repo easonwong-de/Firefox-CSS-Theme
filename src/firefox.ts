@@ -58,12 +58,11 @@ export class FirefoxBrowserManager {
 		if (!this.driverInstance) {
 			throw new Error("Firefox driver instance is not initialised.");
 		}
-		// @ts-expect-error setContext is a Firefox-specific WebDriver extension
 		await this.driverInstance.setContext("chrome");
 	}
 
 	public async executeChromeScript<T>(
-		script: string,
+		script: string | Function,
 		...argumentsList: unknown[]
 	): Promise<T> {
 		await this.ensureChromeContext();
@@ -79,23 +78,27 @@ export class FirefoxBrowserManager {
 		await this.ensureChromeContext();
 
 		return await this.executeChromeScript<UserInterfaceElementDetails[]>(
-			`
-			const matchedElements = Array.from(document.querySelectorAll(arguments[0]));
-			return matchedElements.map((element) => {
-				const attributeMap = {};
-				for (const attribute of element.attributes) {
-					attributeMap[attribute.name] = attribute.value;
-				}
-				return {
-					tagName: element.tagName.toLowerCase(),
-					id: element.id || "",
-					className: element.className || "",
-					childCount: element.children.length,
-					textContent: (element.textContent || "").trim().slice(0, 100),
-					attributes: attributeMap
-				};
-			});
-			`,
+			(querySelector: string) => {
+				const matchedElements = Array.from(
+					document.querySelectorAll(querySelector),
+				);
+				return matchedElements.map((element) => {
+					const attributeMap: Record<string, string> = {};
+					for (const attribute of Array.from(element.attributes)) {
+						attributeMap[attribute.name] = attribute.value;
+					}
+					return {
+						tagName: element.tagName.toLowerCase(),
+						id: element.id || "",
+						className: element.className || "",
+						childCount: element.children.length,
+						textContent: (element.textContent || "")
+							.trim()
+							.slice(0, 100),
+						attributes: attributeMap,
+					};
+				});
+			},
 			selector,
 		);
 	}
@@ -107,28 +110,43 @@ export class FirefoxBrowserManager {
 		await this.ensureChromeContext();
 
 		return await this.executeChromeScript<Record<string, string>>(
-			`
-			const targetElement = document.querySelector(arguments[0]);
-			if (!targetElement) {
-				throw new Error('Element not found for selector: ' + arguments[0]);
-			}
-			const computedStyleDeclaration = window.getComputedStyle(targetElement);
-			const requestedProperties = arguments[1];
-			const styleResult = {};
-
-			if (Array.isArray(requestedProperties) && requestedProperties.length > 0) {
-				for (const propertyName of requestedProperties) {
-					styleResult[propertyName] = computedStyleDeclaration.getPropertyValue(propertyName);
+			(targetSelector: string, requestedProperties?: string[]) => {
+				const targetElement = document.querySelector(targetSelector);
+				if (!targetElement) {
+					throw new Error(
+						"Element not found for selector: " + targetSelector,
+					);
 				}
-			} else {
-				for (let index = 0; index < computedStyleDeclaration.length; index++) {
-					const propertyName = computedStyleDeclaration[index];
-					styleResult[propertyName] = computedStyleDeclaration.getPropertyValue(propertyName);
-				}
-			}
+				const computedStyleDeclaration =
+					window.getComputedStyle(targetElement);
+				const styleResult: Record<string, string> = {};
 
-			return styleResult;
-			`,
+				if (
+					Array.isArray(requestedProperties) &&
+					requestedProperties.length > 0
+				) {
+					for (const propertyName of requestedProperties) {
+						styleResult[propertyName] =
+							computedStyleDeclaration.getPropertyValue(
+								propertyName,
+							);
+					}
+				} else {
+					for (
+						let index = 0;
+						index < computedStyleDeclaration.length;
+						index++
+					) {
+						const propertyName = computedStyleDeclaration[index];
+						styleResult[propertyName] =
+							computedStyleDeclaration.getPropertyValue(
+								propertyName,
+							);
+					}
+				}
+
+				return styleResult;
+			},
 			selector,
 			stylePropertyNames,
 		);
@@ -141,41 +159,48 @@ export class FirefoxBrowserManager {
 		await this.ensureChromeContext();
 
 		return await this.executeChromeScript<UserInterfaceNodeHierarchy>(
-			`
-			const rootTarget = arguments[0] === "window"
-				? document.documentElement
-				: document.querySelector(arguments[0]);
+			(targetSelector: string, maximumTraversalDepth: number) => {
+				const rootTarget =
+					targetSelector === "window"
+						? document.documentElement
+						: document.querySelector(targetSelector);
 
-			if (!rootTarget) {
-				throw new Error('Root element not found for selector: ' + arguments[0]);
-			}
-
-			const maximumTraversalDepth = arguments[1];
-
-			function serializeNode(node, currentDepth) {
-				const attributeMap = {};
-				for (const attribute of node.attributes) {
-					attributeMap[attribute.name] = attribute.value;
+				if (!rootTarget) {
+					throw new Error(
+						"Root element not found for selector: " +
+							targetSelector,
+					);
 				}
 
-				const serializedChildren = [];
-				if (currentDepth < maximumTraversalDepth) {
-					for (const child of node.children) {
-						serializedChildren.push(serializeNode(child, currentDepth + 1));
+				function serializeNode(
+					node: Element,
+					currentDepth: number,
+				): UserInterfaceNodeHierarchy {
+					const attributeMap: Record<string, string> = {};
+					for (const attribute of Array.from(node.attributes)) {
+						attributeMap[attribute.name] = attribute.value;
 					}
+
+					const serializedChildren: UserInterfaceNodeHierarchy[] = [];
+					if (currentDepth < maximumTraversalDepth) {
+						for (const child of Array.from(node.children)) {
+							serializedChildren.push(
+								serializeNode(child, currentDepth + 1),
+							);
+						}
+					}
+
+					return {
+						tagName: node.tagName.toLowerCase(),
+						id: node.id || "",
+						className: node.className || "",
+						attributes: attributeMap,
+						children: serializedChildren,
+					};
 				}
 
-				return {
-					tagName: node.tagName.toLowerCase(),
-					id: node.id || "",
-					className: node.className || "",
-					attributes: attributeMap,
-					children: serializedChildren
-				};
-			}
-
-			return serializeNode(rootTarget, 0);
-			`,
+				return serializeNode(rootTarget, 0);
+			},
 			rootSelector,
 			maximumDepth,
 		);
@@ -191,21 +216,18 @@ export class FirefoxBrowserManager {
 			identifier: string;
 			success: boolean;
 		}>(
-			`
-			const identifier = arguments[0];
-			const cssSource = arguments[1];
+			(identifier: string, cssSource: string) => {
+				let existingStyleElement = document.getElementById(identifier);
+				if (!existingStyleElement) {
+					existingStyleElement = document.createElement("style");
+					existingStyleElement.id = identifier;
+					existingStyleElement.setAttribute("type", "text/css");
+					document.documentElement.appendChild(existingStyleElement);
+				}
 
-			let existingStyleElement = document.getElementById(identifier);
-			if (!existingStyleElement) {
-				existingStyleElement = document.createElement("style");
-				existingStyleElement.id = identifier;
-				existingStyleElement.setAttribute("type", "text/css");
-				document.documentElement.appendChild(existingStyleElement);
-			}
-
-			existingStyleElement.textContent = cssSource;
-			return { success: true, identifier: identifier };
-			`,
+				existingStyleElement.textContent = cssSource;
+				return { success: true, identifier: identifier };
+			},
 			styleIdentifier,
 			cascadingStyleSheetContent,
 		);
@@ -219,18 +241,14 @@ export class FirefoxBrowserManager {
 		return await this.executeChromeScript<{
 			identifier: string;
 			removed: boolean;
-		}>(
-			`
-			const identifier = arguments[0];
+		}>((identifier: string) => {
 			const targetStyleElement = document.getElementById(identifier);
 			if (targetStyleElement) {
 				targetStyleElement.remove();
 				return { removed: true, identifier: identifier };
 			}
 			return { removed: false, identifier: identifier };
-			`,
-			styleIdentifier,
-		);
+		}, styleIdentifier);
 	}
 
 	public async captureScreenshot(
