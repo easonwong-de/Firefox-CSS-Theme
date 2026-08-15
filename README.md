@@ -1,4 +1,4 @@
-# firefox-css-theme-mcp
+# Firefox CSS Theme MCP
 
 Model Context Protocol (MCP) server for inspecting, querying, and live-debugging Firefox UI DOM and CSS themes (`userChrome.css`).
 
@@ -10,7 +10,7 @@ Model Context Protocol (MCP) server for inspecting, querying, and live-debugging
 
 ## Installation & Usage
 
-### Option A — CLI (Claude Code / Codex)
+### Option A — CLI
 
 #### Claude Code
 
