@@ -1,6 +1,15 @@
 import { Builder, By, type WebDriver } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox.js";
 
+declare const ChromeUtils: { importESModule(uri: string): Record<string, any> };
+
+declare const Services: {
+	prefs: {
+		setBoolPref(prefName: string, value: boolean): void;
+		getBoolPref(prefName: string, defaultValue?: boolean): boolean;
+	};
+};
+
 export interface UserInterfaceElementDetails {
 	attributes: Record<string, string>;
 	childCount: number;
@@ -27,24 +36,51 @@ export class FirefoxBrowserManager {
 	): Promise<void> {
 		if (this.driverInstance) return;
 
+		const isNovaUiEnabled = process.argv.includes("--nova-ui");
+
 		const firefoxOptions = new firefox.Options();
-		firefoxOptions.addArguments("-remote-allow-system-access");
+		firefoxOptions.addArguments("-no-remote", "-new-instance");
 		firefoxOptions.setPreference("devtools.chrome.enabled", true);
 		firefoxOptions.setPreference("devtools.debugger.remote-enabled", true);
 		firefoxOptions.setPreference(
+			"devtools.debugger.prompt-connection",
+			false,
+		);
+		firefoxOptions.setPreference(
 			"toolkit.legacyUserProfileCustomizations.stylesheets",
 			true,
+		);
+		firefoxOptions.setPreference("marionette.allow-system-access", true);
+		firefoxOptions.setPreference("remote.allow-system-access", true);
+		firefoxOptions.setPreference("browser.nova.enabled", isNovaUiEnabled);
+		firefoxOptions.setPreference(
+			"browser.newtabpage.activity-stream.nova.enabled",
+			isNovaUiEnabled,
 		);
 
 		if (binaryPath) firefoxOptions.setBinary(binaryPath);
 		if (profileDirectory) firefoxOptions.setProfile(profileDirectory);
 
-		this.driverInstance = await new Builder()
-			.forBrowser("firefox")
-			.setFirefoxOptions(firefoxOptions)
-			.build();
+		const firefoxService = new firefox.ServiceBuilder()
+			.enableVerboseLogging(true)
+			.addArguments("--allow-system-access");
 
-		await this.ensureChromeContext();
+		try {
+			this.driverInstance = await new Builder()
+				.forBrowser("firefox")
+				.setFirefoxOptions(firefoxOptions)
+				.setFirefoxService(firefoxService)
+				.build();
+
+			await this.ensureChromeContext();
+			await this.openBrowserToolbox().catch(() => {});
+		} catch (error) {
+			if (this.driverInstance) {
+				await this.driverInstance.quit().catch(() => {});
+				this.driverInstance = null;
+			}
+			throw error;
+		}
 	}
 
 	public async terminateBrowser(): Promise<void> {
@@ -268,6 +304,22 @@ export class FirefoxBrowserManager {
 		const fullWindowScreenshotBase64 =
 			await this.driverInstance!.takeScreenshot();
 		return { base64Image: fullWindowScreenshotBase64, format: "png" };
+	}
+
+	private async openBrowserToolbox(): Promise<{ success: boolean }> {
+		await this.ensureChromeContext();
+
+		return await this.executeChromeScript<{ success: boolean }>(() => {
+			try {
+				const { BrowserToolboxLauncher } = ChromeUtils.importESModule(
+					"resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs",
+				);
+				BrowserToolboxLauncher.init();
+				return { success: true };
+			} catch {
+				return { success: false };
+			}
+		});
 	}
 }
 

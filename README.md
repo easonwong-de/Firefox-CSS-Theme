@@ -15,13 +15,13 @@ Model Context Protocol (MCP) server for inspecting, querying, and live-debugging
 #### Claude Code
 
 ```bash
-claude mcp add firefox-css-theme -- npx -y firefox-css-theme-mcp
+claude mcp add firefox-css-theme -- npx -y firefox-css-theme-mcp --nova-ui
 ```
 
 #### Codex
 
 ```bash
-codex mcp add firefox-css-theme -- npx -y firefox-css-theme-mcp
+codex mcp add firefox-css-theme -- npx -y firefox-css-theme-mcp --nova-ui
 ```
 
 ### Option B — IDE Configuration
@@ -33,7 +33,7 @@ Add the server configuration to your MCP settings file:
 	"mcpServers": {
 		"firefox-css-theme": {
 			"command": "npx",
-			"args": ["-y", "firefox-css-theme-mcp"]
+			"args": ["-y", "firefox-css-theme-mcp", "--nova-ui"]
 		}
 	}
 }
@@ -57,11 +57,20 @@ npm run build
 	"mcpServers": {
 		"firefox-css-theme": {
 			"command": "node",
-			"args": ["/path/to/Firefox-CSS-Theme-MCP/dist/index.js"]
+			"args": [
+				"/path/to/Firefox-CSS-Theme-MCP/dist/index.js",
+				"--nova-ui"
+			]
 		}
 	}
 }
 ```
+
+## Command-line Flags
+
+| Flag        | Type      | Description                                                                                                                      |
+| :---------- | :-------- | :------------------------------------------------------------------------------------------------------------------------------- |
+| `--nova-ui` | `boolean` | Enables the Firefox Nova UI redesign preferences (`browser.nova.enabled` and `browser.newtabpage.activity-stream.nova.enabled`). |
 
 ## Available MCP Tools
 
