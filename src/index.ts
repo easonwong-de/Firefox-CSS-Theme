@@ -7,7 +7,7 @@ import { globalFirefoxManager } from "./firefox.js";
 
 const serverInstance = new McpServer({
 	name: "firefox-css-theme-mcp",
-	version: "0.1.0",
+	version: "0.1.4",
 });
 
 serverInstance.registerTool(
