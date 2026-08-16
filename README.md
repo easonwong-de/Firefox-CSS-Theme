@@ -2,11 +2,12 @@
 
 Model Context Protocol (MCP) server for inspecting, querying, and live-debugging Firefox UI DOM and CSS themes (`userChrome.css`).
 
+![MCP Usage Example - Customising Close Tab Button](./assets/image.jpg)
+
 ## Requirements
 
 - Node.js >= 18
 - Firefox Browser
-- `geckodriver` available on your `PATH` or managed via Selenium
 
 ## Installation & Usage
 
