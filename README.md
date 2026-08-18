@@ -77,6 +77,7 @@ npm run build
 
 - `launch_browser`: Launches Firefox with chrome debugging capabilities enabled.
 - `close_browser`: Terminates the browser instance.
+- `customize_toolbar`: Activates or controls the Firefox "Customize Toolbar" mode.
 - `get_ui_tree`: Dumps the hierarchical DOM tree of the chrome window.
 - `query_ui_elements`: Queries elements matching a CSS selector in the browser chrome.
 - `get_computed_styles`: Extracts computed CSS property values of a specific UI element.

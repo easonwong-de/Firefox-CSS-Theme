@@ -242,6 +242,72 @@ export class FirefoxBrowserManager {
 		);
 	}
 
+	public async customizeToolbar(
+		action: "enter" | "exit" = "enter",
+	): Promise<{ isCustomizing: boolean; success: boolean }> {
+		await this.ensureChromeContext();
+
+		return await this.executeChromeScript<{
+			isCustomizing: boolean;
+			success: boolean;
+		}>(async (requestedAction: "enter" | "exit") => {
+			const targetWindow = window as any;
+			const documentElement = document.documentElement;
+
+			if (!targetWindow.gCustomizeMode) {
+				const customizeCommand = document.getElementById(
+					"cmd_CustomizeToolbars",
+				) as any;
+				if (customizeCommand) {
+					customizeCommand.doCommand();
+					return {
+						isCustomizing:
+							documentElement.hasAttribute("customizing"),
+						success: true,
+					};
+				}
+				throw new Error(
+					"Customize toolbar mode is not available in the current context.",
+				);
+			}
+
+			const isCurrentlyCustomizing =
+				documentElement.hasAttribute("customizing") ||
+				Boolean(targetWindow.gCustomizeMode.visible);
+			const shouldEnter = requestedAction === "enter";
+
+			if (shouldEnter !== isCurrentlyCustomizing) {
+				const transitionEventName = shouldEnter
+					? "customizationready"
+					: "aftercustomization";
+
+				await new Promise<void>((resolve) => {
+					const timeoutIdentifier = setTimeout(resolve, 5000);
+					const handleTransition = () => {
+						clearTimeout(timeoutIdentifier);
+						targetWindow.removeEventListener(
+							transitionEventName,
+							handleTransition,
+						);
+						resolve();
+					};
+					targetWindow.addEventListener(
+						transitionEventName,
+						handleTransition,
+					);
+					targetWindow.gCustomizeMode[requestedAction]();
+				});
+			}
+
+			return {
+				isCustomizing:
+					documentElement.hasAttribute("customizing") ||
+					Boolean(targetWindow.gCustomizeMode.visible),
+				success: true,
+			};
+		}, action);
+	}
+
 	public async injectUserInterfaceStyle(
 		cascadingStyleSheetContent: string,
 		styleIdentifier: string = "mcp-injected-style",
