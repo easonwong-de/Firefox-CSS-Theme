@@ -7,7 +7,7 @@ import { globalFirefoxManager } from "./firefox.js";
 
 const serverInstance = new McpServer({
 	name: "firefox-css-theme-mcp",
-	version: "0.1.5",
+	version: "0.1.6",
 });
 
 serverInstance.registerTool(
@@ -49,6 +49,30 @@ serverInstance.registerTool(
 		await globalFirefoxManager.terminateBrowser();
 		return {
 			content: [{ type: "text", text: "Firefox closed successfully." }],
+		};
+	},
+);
+
+serverInstance.registerTool(
+	"customize_toolbar",
+	{
+		description:
+			"Activate or manage the Firefox Customize Toolbar mode in the browser chrome.",
+		inputSchema: {
+			action: z
+				.enum(["enter", "exit"])
+				.default("enter")
+				.describe(
+					"Action to perform on customize toolbar mode ('enter' or 'exit'). Defaults to 'enter'.",
+				),
+		},
+	},
+	async (parameters) => {
+		const result = await globalFirefoxManager.customizeToolbar(
+			parameters.action,
+		);
+		return {
+			content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
 		};
 	},
 );
