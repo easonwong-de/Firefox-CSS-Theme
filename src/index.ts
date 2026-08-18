@@ -1,13 +1,18 @@
 #!/usr/bin/env node
 
+import { readFileSync } from "node:fs";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { firefoxManager } from "./firefox.js";
 
+const packageJson = JSON.parse(
+	readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+) as { name: string; version: string };
+
 const server = new McpServer({
-	name: "firefox-css-theme-mcp",
-	version: "0.1.6",
+	name: packageJson.name,
+	version: packageJson.version,
 });
 
 server.registerTool(

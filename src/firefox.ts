@@ -33,10 +33,7 @@ export class FirefoxManager {
 
 		options.setPreference("devtools.chrome.enabled", true);
 		options.setPreference("devtools.debugger.remote-enabled", true);
-		options.setPreference(
-			"devtools.debugger.prompt-connection",
-			false,
-		);
+		options.setPreference("devtools.debugger.prompt-connection", false);
 		options.setPreference(
 			"toolkit.legacyUserProfileCustomizations.stylesheets",
 			true,
