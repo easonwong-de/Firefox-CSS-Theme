@@ -3,14 +3,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { globalFirefoxManager } from "./firefox.js";
+import { firefoxManager } from "./firefox.js";
 
-const serverInstance = new McpServer({
+const server = new McpServer({
 	name: "firefox-css-theme-mcp",
 	version: "0.1.6",
 });
 
-serverInstance.registerTool(
+server.registerTool(
 	"launch_browser",
 	{
 		description:
@@ -27,7 +27,7 @@ serverInstance.registerTool(
 		},
 	},
 	async (parameters) => {
-		await globalFirefoxManager.initialiseBrowser(
+		await firefoxManager.initialiseBrowser(
 			parameters.binaryPath,
 			parameters.profileDirectory,
 		);
@@ -42,18 +42,18 @@ serverInstance.registerTool(
 	},
 );
 
-serverInstance.registerTool(
+server.registerTool(
 	"close_browser",
 	{ description: "Close the running Firefox instance." },
 	async () => {
-		await globalFirefoxManager.terminateBrowser();
+		await firefoxManager.terminateBrowser();
 		return {
 			content: [{ type: "text", text: "Firefox closed successfully." }],
 		};
 	},
 );
 
-serverInstance.registerTool(
+server.registerTool(
 	"customize_toolbar",
 	{
 		description:
@@ -68,16 +68,14 @@ serverInstance.registerTool(
 		},
 	},
 	async (parameters) => {
-		const result = await globalFirefoxManager.customizeToolbar(
-			parameters.action,
-		);
+		const result = await firefoxManager.customizeToolbar(parameters.action);
 		return {
 			content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
 		};
 	},
 );
 
-serverInstance.registerTool(
+server.registerTool(
 	"get_ui_tree",
 	{
 		description:
@@ -94,7 +92,7 @@ serverInstance.registerTool(
 		},
 	},
 	async (parameters) => {
-		const treeData = await globalFirefoxManager.getUserInterfaceTree(
+		const treeData = await firefoxManager.getUserInterfaceTree(
 			parameters.rootSelector,
 			parameters.maximumDepth,
 		);
@@ -106,7 +104,7 @@ serverInstance.registerTool(
 	},
 );
 
-serverInstance.registerTool(
+server.registerTool(
 	"query_ui_elements",
 	{
 		description:
@@ -120,7 +118,7 @@ serverInstance.registerTool(
 		},
 	},
 	async (parameters) => {
-		const elements = await globalFirefoxManager.queryElements(
+		const elements = await firefoxManager.queryElements(
 			parameters.selector,
 		);
 		return {
@@ -131,7 +129,7 @@ serverInstance.registerTool(
 	},
 );
 
-serverInstance.registerTool(
+server.registerTool(
 	"get_computed_styles",
 	{
 		description:
@@ -149,7 +147,7 @@ serverInstance.registerTool(
 		},
 	},
 	async (parameters) => {
-		const styles = await globalFirefoxManager.getComputedStyles(
+		const styles = await firefoxManager.getComputedStyles(
 			parameters.selector,
 			parameters.properties,
 		);
@@ -159,7 +157,7 @@ serverInstance.registerTool(
 	},
 );
 
-serverInstance.registerTool(
+server.registerTool(
 	"inject_theme_css",
 	{
 		description:
@@ -175,7 +173,7 @@ serverInstance.registerTool(
 		},
 	},
 	async (parameters) => {
-		const result = await globalFirefoxManager.injectUserInterfaceStyle(
+		const result = await firefoxManager.injectUserInterfaceStyle(
 			parameters.css,
 			parameters.styleId,
 		);
@@ -185,7 +183,7 @@ serverInstance.registerTool(
 	},
 );
 
-serverInstance.registerTool(
+server.registerTool(
 	"remove_theme_css",
 	{
 		description:
@@ -197,7 +195,7 @@ serverInstance.registerTool(
 		},
 	},
 	async (parameters) => {
-		const result = await globalFirefoxManager.removeUserInterfaceStyle(
+		const result = await firefoxManager.removeUserInterfaceStyle(
 			parameters.styleId,
 		);
 		return {
@@ -206,7 +204,7 @@ serverInstance.registerTool(
 	},
 );
 
-serverInstance.registerTool(
+server.registerTool(
 	"take_ui_screenshot",
 	{
 		description:
@@ -221,7 +219,7 @@ serverInstance.registerTool(
 		},
 	},
 	async (parameters) => {
-		const screenshot = await globalFirefoxManager.captureScreenshot(
+		const screenshot = await firefoxManager.captureScreenshot(
 			parameters.selector,
 		);
 		return {
@@ -236,7 +234,7 @@ serverInstance.registerTool(
 	},
 );
 
-serverInstance.registerTool(
+server.registerTool(
 	"execute_chrome_javascript",
 	{
 		description:
@@ -250,7 +248,7 @@ serverInstance.registerTool(
 		},
 	},
 	async (parameters) => {
-		const result = await globalFirefoxManager.executeChromeScript(
+		const result = await firefoxManager.executeChromeScript(
 			parameters.script,
 		);
 		return {
@@ -260,8 +258,8 @@ serverInstance.registerTool(
 );
 
 async function main(): Promise<void> {
-	const transportInstance = new StdioServerTransport();
-	await serverInstance.connect(transportInstance);
+	const transport = new StdioServerTransport();
+	await server.connect(transport);
 }
 
 main().catch((error) => {

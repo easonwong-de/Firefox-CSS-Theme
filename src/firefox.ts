@@ -1,40 +1,27 @@
 import { Builder, By, type WebDriver } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox.js";
 
-declare const ChromeUtils: { importESModule(uri: string): Record<string, any> };
+import type {
+	BrowserToolboxLauncherModule,
+	BrowserToolboxResult,
+	FirefoxCommandElement,
+	ScreenshotCaptureResult,
+	StyleInjectionResult,
+	StyleRemovalResult,
+	ToolbarCustomizationAction,
+	ToolbarCustomizationResult,
+	UserInterfaceElementDetails,
+	UserInterfaceNodeHierarchy,
+} from "./types.js";
 
-declare const Services: {
-	prefs: {
-		setBoolPref(prefName: string, value: boolean): void;
-		getBoolPref(prefName: string, defaultValue?: boolean): boolean;
-	};
-};
-
-export interface UserInterfaceElementDetails {
-	attributes: Record<string, string>;
-	childCount: number;
-	className: string;
-	id: string;
-	tagName: string;
-	textContent: string;
-}
-
-export interface UserInterfaceNodeHierarchy {
-	attributes: Record<string, string>;
-	children: UserInterfaceNodeHierarchy[];
-	className: string;
-	id: string;
-	tagName: string;
-}
-
-export class FirefoxBrowserManager {
-	private driverInstance: WebDriver | null = null;
+export class FirefoxManager {
+	private driver: WebDriver | null = null;
 
 	public async initialiseBrowser(
 		binaryPath?: string,
 		profileDirectory?: string,
 	): Promise<void> {
-		if (this.driverInstance) return;
+		if (this.driver) return;
 
 		const isNovaUiEnabled = process.argv.includes("--nova-ui");
 
@@ -66,7 +53,7 @@ export class FirefoxBrowserManager {
 			.addArguments("--allow-system-access");
 
 		try {
-			this.driverInstance = await new Builder()
+			this.driver = await new Builder()
 				.forBrowser("firefox")
 				.setFirefoxOptions(firefoxOptions)
 				.setFirefoxService(firefoxService)
@@ -75,26 +62,26 @@ export class FirefoxBrowserManager {
 			await this.ensureChromeContext();
 			await this.openBrowserToolbox().catch(() => {});
 		} catch (error) {
-			if (this.driverInstance) {
-				await this.driverInstance.quit().catch(() => {});
-				this.driverInstance = null;
+			if (this.driver) {
+				await this.driver.quit().catch(() => {});
+				this.driver = null;
 			}
 			throw error;
 		}
 	}
 
 	public async terminateBrowser(): Promise<void> {
-		if (!this.driverInstance) return;
+		if (!this.driver) return;
 
-		await this.driverInstance.quit();
-		this.driverInstance = null;
+		await this.driver.quit();
+		this.driver = null;
 	}
 
 	public async ensureChromeContext(): Promise<void> {
-		if (!this.driverInstance) {
+		if (!this.driver) {
 			throw new Error("Firefox driver instance is not initialised.");
 		}
-		await this.driverInstance.setContext("chrome");
+		await this.driver.setContext("chrome");
 	}
 
 	public async executeChromeScript<T>(
@@ -102,7 +89,7 @@ export class FirefoxBrowserManager {
 		...argumentsList: unknown[]
 	): Promise<T> {
 		await this.ensureChromeContext();
-		return (await this.driverInstance!.executeScript(
+		return (await this.driver!.executeScript(
 			script,
 			...argumentsList,
 		)) as T;
@@ -243,81 +230,78 @@ export class FirefoxBrowserManager {
 	}
 
 	public async customizeToolbar(
-		action: "enter" | "exit" = "enter",
-	): Promise<{ isCustomizing: boolean; success: boolean }> {
+		action: ToolbarCustomizationAction = "enter",
+	): Promise<ToolbarCustomizationResult> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<{
-			isCustomizing: boolean;
-			success: boolean;
-		}>(async (requestedAction: "enter" | "exit") => {
-			const targetWindow = window as any;
-			const documentElement = document.documentElement;
+		return await this.executeChromeScript<ToolbarCustomizationResult>(
+			async (requestedAction: ToolbarCustomizationAction) => {
+				const customizeMode = window.gCustomizeMode;
+				const documentElement = document.documentElement;
 
-			if (!targetWindow.gCustomizeMode) {
-				const customizeCommand = document.getElementById(
-					"cmd_CustomizeToolbars",
-				) as any;
-				if (customizeCommand) {
-					customizeCommand.doCommand();
-					return {
-						isCustomizing:
-							documentElement.hasAttribute("customizing"),
-						success: true,
-					};
+				if (!customizeMode) {
+					const customizeCommand = document.getElementById(
+						"cmd_CustomizeToolbars",
+					) as FirefoxCommandElement | null;
+					if (customizeCommand) {
+						customizeCommand.doCommand();
+						return {
+							isCustomizing:
+								documentElement.hasAttribute("customizing"),
+							success: true,
+						};
+					}
+					throw new Error(
+						"Customize toolbar mode is not available in the current context.",
+					);
 				}
-				throw new Error(
-					"Customize toolbar mode is not available in the current context.",
-				);
-			}
 
-			const isCurrentlyCustomizing =
-				documentElement.hasAttribute("customizing") ||
-				Boolean(targetWindow.gCustomizeMode.visible);
-			const shouldEnter = requestedAction === "enter";
+				const isCurrentlyCustomizing =
+					documentElement.hasAttribute("customizing") ||
+					Boolean(customizeMode.visible);
+				const shouldEnter = requestedAction === "enter";
 
-			if (shouldEnter !== isCurrentlyCustomizing) {
-				const transitionEventName = shouldEnter
-					? "customizationready"
-					: "aftercustomization";
+				if (shouldEnter !== isCurrentlyCustomizing) {
+					const transitionEventName = shouldEnter
+						? "customizationready"
+						: "aftercustomization";
 
-				await new Promise<void>((resolve) => {
-					const timeoutIdentifier = setTimeout(resolve, 5000);
-					const handleTransition = () => {
-						clearTimeout(timeoutIdentifier);
-						targetWindow.removeEventListener(
+					await new Promise<void>((resolve) => {
+						const timeoutIdentifier = setTimeout(resolve, 5000);
+						const handleTransition = () => {
+							clearTimeout(timeoutIdentifier);
+							window.removeEventListener(
+								transitionEventName,
+								handleTransition,
+							);
+							resolve();
+						};
+						window.addEventListener(
 							transitionEventName,
 							handleTransition,
 						);
-						resolve();
-					};
-					targetWindow.addEventListener(
-						transitionEventName,
-						handleTransition,
-					);
-					targetWindow.gCustomizeMode[requestedAction]();
-				});
-			}
+						customizeMode[requestedAction]();
+					});
+				}
 
-			return {
-				isCustomizing:
-					documentElement.hasAttribute("customizing") ||
-					Boolean(targetWindow.gCustomizeMode.visible),
-				success: true,
-			};
-		}, action);
+				return {
+					isCustomizing:
+						documentElement.hasAttribute("customizing") ||
+						Boolean(customizeMode.visible),
+					success: true,
+				};
+			},
+			action,
+		);
 	}
 
 	public async injectUserInterfaceStyle(
 		cascadingStyleSheetContent: string,
 		styleIdentifier: string = "mcp-injected-style",
-	): Promise<{ success: boolean; identifier: string }> {
+	): Promise<StyleInjectionResult> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<{
-			identifier: string;
-			success: boolean;
-		}>(
+		return await this.executeChromeScript<StyleInjectionResult>(
 			(identifier: string, cssSource: string) => {
 				let existingStyleElement = document.getElementById(identifier);
 				if (!existingStyleElement) {
@@ -337,29 +321,29 @@ export class FirefoxBrowserManager {
 
 	public async removeUserInterfaceStyle(
 		styleIdentifier: string,
-	): Promise<{ removed: boolean; identifier: string }> {
+	): Promise<StyleRemovalResult> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<{
-			identifier: string;
-			removed: boolean;
-		}>((identifier: string) => {
-			const targetStyleElement = document.getElementById(identifier);
-			if (targetStyleElement) {
-				targetStyleElement.remove();
-				return { removed: true, identifier: identifier };
-			}
-			return { removed: false, identifier: identifier };
-		}, styleIdentifier);
+		return await this.executeChromeScript<StyleRemovalResult>(
+			(identifier: string) => {
+				const targetStyleElement = document.getElementById(identifier);
+				if (targetStyleElement) {
+					targetStyleElement.remove();
+					return { removed: true, identifier: identifier };
+				}
+				return { removed: false, identifier: identifier };
+			},
+			styleIdentifier,
+		);
 	}
 
 	public async captureScreenshot(
 		targetSelector?: string,
-	): Promise<{ base64Image: string; format: string }> {
+	): Promise<ScreenshotCaptureResult> {
 		await this.ensureChromeContext();
 
 		if (targetSelector) {
-			const targetWebElement = await this.driverInstance!.findElement(
+			const targetWebElement = await this.driver!.findElement(
 				By.css(targetSelector),
 			);
 			const elementScreenshotBase64 =
@@ -367,19 +351,19 @@ export class FirefoxBrowserManager {
 			return { base64Image: elementScreenshotBase64, format: "png" };
 		}
 
-		const fullWindowScreenshotBase64 =
-			await this.driverInstance!.takeScreenshot();
+		const fullWindowScreenshotBase64 = await this.driver!.takeScreenshot();
 		return { base64Image: fullWindowScreenshotBase64, format: "png" };
 	}
 
-	private async openBrowserToolbox(): Promise<{ success: boolean }> {
+	private async openBrowserToolbox(): Promise<BrowserToolboxResult> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<{ success: boolean }>(() => {
+		return await this.executeChromeScript<BrowserToolboxResult>(() => {
 			try {
-				const { BrowserToolboxLauncher } = ChromeUtils.importESModule(
-					"resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs",
-				);
+				const { BrowserToolboxLauncher } =
+					ChromeUtils.importESModule<BrowserToolboxLauncherModule>(
+						"resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs",
+					);
 				BrowserToolboxLauncher.init();
 				return { success: true };
 			} catch {
@@ -389,4 +373,4 @@ export class FirefoxBrowserManager {
 	}
 }
 
-export const globalFirefoxManager = new FirefoxBrowserManager();
+export const firefoxManager = new FirefoxManager();
