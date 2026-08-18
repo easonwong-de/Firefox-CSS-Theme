@@ -1,3 +1,4 @@
+import type {} from "./selenium-webdriver.d.ts";
 import { Builder, By, type WebDriver } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox.js";
 
@@ -24,39 +25,42 @@ export class FirefoxManager {
 		if (this.driver) return;
 
 		const isNovaUiEnabled = process.argv.includes("--nova-ui");
+		const isHeadlessEnabled = process.argv.includes("--headless");
 
-		const firefoxOptions = new firefox.Options();
-		firefoxOptions.addArguments("-no-remote", "-new-instance");
-		firefoxOptions.setPreference("devtools.chrome.enabled", true);
-		firefoxOptions.setPreference("devtools.debugger.remote-enabled", true);
-		firefoxOptions.setPreference(
+		const options = new firefox.Options();
+		options.addArguments("-no-remote", "-new-instance");
+		if (isHeadlessEnabled) options.addArguments("-headless");
+
+		options.setPreference("devtools.chrome.enabled", true);
+		options.setPreference("devtools.debugger.remote-enabled", true);
+		options.setPreference(
 			"devtools.debugger.prompt-connection",
 			false,
 		);
-		firefoxOptions.setPreference(
+		options.setPreference(
 			"toolkit.legacyUserProfileCustomizations.stylesheets",
 			true,
 		);
-		firefoxOptions.setPreference("marionette.allow-system-access", true);
-		firefoxOptions.setPreference("remote.allow-system-access", true);
-		firefoxOptions.setPreference("browser.nova.enabled", isNovaUiEnabled);
-		firefoxOptions.setPreference(
+		options.setPreference("marionette.allow-system-access", true);
+		options.setPreference("remote.allow-system-access", true);
+		options.setPreference("browser.nova.enabled", isNovaUiEnabled);
+		options.setPreference(
 			"browser.newtabpage.activity-stream.nova.enabled",
 			isNovaUiEnabled,
 		);
 
-		if (binaryPath) firefoxOptions.setBinary(binaryPath);
-		if (profileDirectory) firefoxOptions.setProfile(profileDirectory);
+		if (binaryPath) options.setBinary(binaryPath);
+		if (profileDirectory) options.setProfile(profileDirectory);
 
-		const firefoxService = new firefox.ServiceBuilder()
+		const service = new firefox.ServiceBuilder()
 			.enableVerboseLogging(true)
 			.addArguments("--allow-system-access");
 
 		try {
 			this.driver = await new Builder()
 				.forBrowser("firefox")
-				.setFirefoxOptions(firefoxOptions)
-				.setFirefoxService(firefoxService)
+				.setFirefoxOptions(options)
+				.setFirefoxService(service)
 				.build();
 
 			await this.ensureChromeContext();
@@ -72,7 +76,6 @@ export class FirefoxManager {
 
 	public async terminateBrowser(): Promise<void> {
 		if (!this.driver) return;
-
 		await this.driver.quit();
 		this.driver = null;
 	}
@@ -85,7 +88,7 @@ export class FirefoxManager {
 	}
 
 	public async executeChromeScript<T>(
-		script: string | Function,
+		script: string | ((...argumentsList: any[]) => T | Promise<T>),
 		...argumentsList: unknown[]
 	): Promise<T> {
 		await this.ensureChromeContext();
@@ -195,34 +198,70 @@ export class FirefoxManager {
 					);
 				}
 
-				function serializeNode(
-					node: Element,
-					currentDepth: number,
-				): UserInterfaceNodeHierarchy {
-					const attributeMap: Record<string, string> = {};
-					for (const attribute of Array.from(node.attributes)) {
-						attributeMap[attribute.name] = attribute.value;
-					}
+				const rootNodeHierarchy: UserInterfaceNodeHierarchy = {
+					tagName: rootTarget.tagName.toLowerCase(),
+					id: rootTarget.id || "",
+					className: rootTarget.className || "",
+					attributes: {},
+					children: [],
+				};
 
-					const serializedChildren: UserInterfaceNodeHierarchy[] = [];
-					if (currentDepth < maximumTraversalDepth) {
-						for (const child of Array.from(node.children)) {
-							serializedChildren.push(
-								serializeNode(child, currentDepth + 1),
-							);
-						}
-					}
-
-					return {
-						tagName: node.tagName.toLowerCase(),
-						id: node.id || "",
-						className: node.className || "",
-						attributes: attributeMap,
-						children: serializedChildren,
-					};
+				for (const attribute of Array.from(rootTarget.attributes)) {
+					rootNodeHierarchy.attributes[attribute.name] =
+						attribute.value;
 				}
 
-				return serializeNode(rootTarget, 0);
+				const nodeQueue: Array<{
+					domNode: Element;
+					hierarchyNode: UserInterfaceNodeHierarchy;
+					currentDepth: number;
+				}> = [
+					{
+						domNode: rootTarget,
+						hierarchyNode: rootNodeHierarchy,
+						currentDepth: 0,
+					},
+				];
+
+				while (nodeQueue.length > 0) {
+					const queueItem = nodeQueue.shift();
+					if (
+						!queueItem ||
+						queueItem.currentDepth >= maximumTraversalDepth
+					) {
+						continue;
+					}
+
+					for (const childElement of Array.from(
+						queueItem.domNode.children,
+					)) {
+						const childAttributes: Record<string, string> = {};
+						for (const attribute of Array.from(
+							childElement.attributes,
+						)) {
+							childAttributes[attribute.name] = attribute.value;
+						}
+
+						const childHierarchyNode: UserInterfaceNodeHierarchy = {
+							tagName: childElement.tagName.toLowerCase(),
+							id: childElement.id || "",
+							className: childElement.className || "",
+							attributes: childAttributes,
+							children: [],
+						};
+
+						queueItem.hierarchyNode.children.push(
+							childHierarchyNode,
+						);
+						nodeQueue.push({
+							domNode: childElement,
+							hierarchyNode: childHierarchyNode,
+							currentDepth: queueItem.currentDepth + 1,
+						});
+					}
+				}
+
+				return rootNodeHierarchy;
 			},
 			rootSelector,
 			maximumDepth,
@@ -268,17 +307,13 @@ export class FirefoxManager {
 
 					await new Promise<void>((resolve) => {
 						const timeoutIdentifier = setTimeout(resolve, 5000);
-						const handleTransition = () => {
-							clearTimeout(timeoutIdentifier);
-							window.removeEventListener(
-								transitionEventName,
-								handleTransition,
-							);
-							resolve();
-						};
 						window.addEventListener(
 							transitionEventName,
-							handleTransition,
+							() => {
+								clearTimeout(timeoutIdentifier);
+								resolve();
+							},
+							{ once: true },
 						);
 						customizeMode[requestedAction]();
 					});

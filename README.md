@@ -69,9 +69,10 @@ npm run build
 
 ## Command-line Flags
 
-| Flag        | Type      | Description                                                                                                                      |
-| :---------- | :-------- | :------------------------------------------------------------------------------------------------------------------------------- |
-| `--nova-ui` | `boolean` | Enables the Firefox Nova UI redesign preferences (`browser.nova.enabled` and `browser.newtabpage.activity-stream.nova.enabled`). |
+| Flag         | Type      | Description                                                                                                                      |
+| :----------- | :-------- | :------------------------------------------------------------------------------------------------------------------------------- |
+| `--nova-ui`  | `boolean` | Enables the Firefox Nova UI redesign preferences (`browser.nova.enabled` and `browser.newtabpage.activity-stream.nova.enabled`). |
+| `--headless` | `boolean` | Runs Firefox in headless mode without displaying a graphical user interface window.                                              |
 
 ## Available MCP Tools
 

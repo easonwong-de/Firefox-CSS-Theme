@@ -24,7 +24,8 @@
 		"build": "tsc",
 		"format": "prettier --write --list-different .",
 		"prepublishOnly": "npm run build",
-		"start": "node dist/index.js"
+		"start": "node dist/index.js",
+		"test": "tsx tests/run.ts --headless"
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.30.0",
@@ -35,6 +36,7 @@
 		"@types/node": "^26.2.0",
 		"@types/selenium-webdriver": "^4.35.6",
 		"prettier": "^3.9.6",
+		"tsx": "^4.23.12",
 		"typescript": "^7.0.2"
 	}
 }
