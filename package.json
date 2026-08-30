@@ -1,7 +1,7 @@
 {
 	"name": "firefox-css-theme-mcp",
-	"version": "0.1.6",
-	"description": "Model Context Protocol server for inspecting and live-debugging Firefox UI DOM and CSS themes.",
+	"version": "0.1.7",
+	"description": "DEPRECATED: Renamed to firefox-css-theme. Use 'npx -y firefox-css-theme mcp' instead.",
 	"homepage": "https://github.com/easonwong-de/Firefox-CSS-Theme-MCP#readme",
 	"bugs": {
 		"url": "https://github.com/easonwong-de/Firefox-CSS-Theme-MCP/issues"
@@ -13,30 +13,20 @@
 	"license": "MIT",
 	"author": "Eason Wong <me@easonwong.de> (https://easonwong.de/)",
 	"type": "module",
-	"main": "dist/index.js",
+	"main": "index.js",
 	"bin": {
-		"firefox-css-theme-mcp": "dist/index.js"
+		"firefox-css-theme-mcp": "index.js"
 	},
 	"files": [
-		"dist"
+		"index.js"
 	],
 	"scripts": {
-		"build": "tsc",
-		"format": "prettier --write --list-different .",
-		"prepublishOnly": "npm run build",
-		"start": "node dist/index.js",
-		"test": "tsx tests/run.ts --headless"
+		"format": "prettier --write --list-different ."
 	},
 	"dependencies": {
-		"@modelcontextprotocol/sdk": "^1.30.0",
-		"selenium-webdriver": "^4.47.0",
-		"zod": "^4.4.3"
+		"firefox-css-theme": ">=0.1.0"
 	},
 	"devDependencies": {
-		"@types/node": "^26.2.0",
-		"@types/selenium-webdriver": "^4.35.6",
-		"prettier": "^3.9.6",
-		"tsx": "^4.23.12",
-		"typescript": "^7.0.2"
+		"prettier": "^3.9.6"
 	}
 }
