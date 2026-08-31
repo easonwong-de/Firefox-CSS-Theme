@@ -1,7 +1,7 @@
 # Firefox CSS Theme
 
 [![npm version](https://img.shields.io/npm/v/firefox-css-theme)](https://www.npmjs.com/package/firefox-css-theme)
-[![Test](https://github.com/easonwong-de/Firefox-CSS-Theme-MCP/actions/workflows/test.yml/badge.svg)](https://github.com/easonwong-de/Firefox-CSS-Theme-MCP/actions/workflows/test.yml)
+[![Test](https://github.com/easonwong-de/Firefox-CSS-Theme/actions/workflows/test.yml/badge.svg)](https://github.com/easonwong-de/Firefox-CSS-Theme/actions/workflows/test.yml)
 
 A CLI toolkit for scaffolding, compiling, live-debugging, and watching Firefox UI and CSS themes (`userChrome.css` and `userContent.css`). It also provides a Model Context Protocol (MCP) server for AI-assisted inspection and styling.
 
@@ -176,7 +176,7 @@ Or using an absolute path to a local build:
 		"firefox-css-theme": {
 			"command": "node",
 			"args": [
-				"/absolute/path/to/firefox-css-theme-mcp/dist/cli.js",
+				"/absolute/path/to/firefox-css-theme/dist/cli.js",
 				"mcp",
 				"--nova-ui"
 			]
