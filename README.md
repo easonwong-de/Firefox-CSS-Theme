@@ -70,15 +70,15 @@ firefox-css-theme start [options]
 
 #### Options
 
-| Option                 | Description                                                                           |
-| ---------------------- | ------------------------------------------------------------------------------------- |
+| Option                 | Description                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------- |
 | `-p, --profile <name>` | Designate an existing Firefox profile by name (temporary profile if omitted) |
-| `-c, --chrome <path>`  | Custom path to `userChrome.css` (default: `./userChrome.css`)                         |
-| `-u, --content <path>` | Custom path to `userContent.css` (default: `./userContent.css`)                       |
-| `--no-watch`           | Disable file watching and live reloading                                              |
-| `--headless`           | Run Firefox in headless mode                                                          |
-| `--nova-ui`            | Enable Firefox Nova UI redesign preferences                                           |
-| `--binary <path>`      | Path to custom Firefox executable binary                                              |
+| `-c, --chrome <path>`  | Custom path to `userChrome.css` (default: `./userChrome.css`)                |
+| `-u, --content <path>` | Custom path to `userContent.css` (default: `./userContent.css`)              |
+| `--no-watch`           | Disable file watching and live reloading                                     |
+| `--headless`           | Run Firefox in headless mode                                                 |
+| `--nova-ui`            | Enable Firefox Nova UI redesign preferences                                  |
+| `--binary <path>`      | Path to custom Firefox executable binary                                     |
 
 ### `firefox-css-theme profiles`
 
@@ -153,7 +153,7 @@ claude mcp add firefox-css-theme -- npx -y firefox-css-theme mcp --nova-ui
 codex mcp add firefox-css-theme -- npx -y firefox-css-theme mcp --nova-ui
 ```
 
-#### IDE MCP Settings (`mcpServers`)
+#### IDE MCP Configuration
 
 Using `npx`:
 
@@ -168,7 +168,7 @@ Using `npx`:
 }
 ```
 
-Or using an absolute path to a local build:
+Or using a local build:
 
 ```json
 {
@@ -176,7 +176,7 @@ Or using an absolute path to a local build:
 		"firefox-css-theme": {
 			"command": "node",
 			"args": [
-				"/absolute/path/to/firefox-css-theme/dist/cli.js",
+				"/path/to/firefox-css-theme/dist/cli.js",
 				"mcp",
 				"--nova-ui"
 			]
