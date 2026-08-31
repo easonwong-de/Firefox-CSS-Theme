@@ -15,36 +15,40 @@ const DEFAULT_CONTENT_CSS = `/* Firefox userContent.css */
 `;
 
 /**
+ * Scaffolds a starter stylesheet template file on disk if it does not already
+ * exist or if forced.
+ */
+function createStylesheetFile(
+	filePath: string,
+	defaultContent: string,
+	force?: boolean,
+): void {
+	const resolvedPath = path.resolve(process.cwd(), filePath);
+	if (existsSync(resolvedPath) && !force) {
+		console.warn(
+			`\x1b[33m[skip]\x1b[0m ${resolvedPath} already exists. Use --force to overwrite.`,
+		);
+		return;
+	}
+	writeFileSync(resolvedPath, defaultContent, "utf8");
+	console.log(`\x1b[32m[created]\x1b[0m ${resolvedPath}`);
+}
+
+/**
  * Scaffolds starter userChrome.css and userContent.css boilerplate files with
  * namespace headers.
  */
 export async function createCommand(
 	options: CreateCommandOptions = {},
 ): Promise<void> {
-	const chromePath = path.resolve(
-		process.cwd(),
+	createStylesheetFile(
 		options.chromePath || "userChrome.css",
+		DEFAULT_CHROME_CSS,
+		options.force,
 	);
-	const contentPath = path.resolve(
-		process.cwd(),
+	createStylesheetFile(
 		options.contentPath || "userContent.css",
+		DEFAULT_CONTENT_CSS,
+		options.force,
 	);
-
-	if (existsSync(chromePath) && !options.force) {
-		console.warn(
-			`\x1b[33m[skip]\x1b[0m ${chromePath} already exists. Use --force to overwrite.`,
-		);
-	} else {
-		writeFileSync(chromePath, DEFAULT_CHROME_CSS, "utf8");
-		console.log(`\x1b[32m[created]\x1b[0m ${chromePath}`);
-	}
-
-	if (existsSync(contentPath) && !options.force) {
-		console.warn(
-			`\x1b[33m[skip]\x1b[0m ${contentPath} already exists. Use --force to overwrite.`,
-		);
-	} else {
-		writeFileSync(contentPath, DEFAULT_CONTENT_CSS, "utf8");
-		console.log(`\x1b[32m[created]\x1b[0m ${contentPath}`);
-	}
 }

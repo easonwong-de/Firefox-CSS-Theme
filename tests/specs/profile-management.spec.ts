@@ -1,5 +1,5 @@
 import {
-	listFirefoxProfiles,
+	listProfiles,
 	resolveProfileDirectoryByName,
 } from "../../src/profiles.js";
 import type { TestCase } from "../types.js";
@@ -7,7 +7,7 @@ import type { TestCase } from "../types.js";
 export const testCase: TestCase = {
 	name: "Firefox Profile Discovery and Name Resolution",
 	async run({ results }) {
-		const profiles = listFirefoxProfiles();
+		const profiles = listProfiles();
 		if (Array.isArray(profiles)) {
 			results.pass("Detected installed Firefox profiles list");
 		} else {

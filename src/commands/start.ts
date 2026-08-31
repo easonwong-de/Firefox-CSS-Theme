@@ -4,7 +4,7 @@ import { firefoxManager } from "../firefox.js";
 import { compileCssFile } from "../processor.js";
 import { ROOT_USER_CHROME_ID, ROOT_USER_CONTENT_ID } from "../registry.js";
 import type { StartCommandOptions, StyleTarget } from "../types.js";
-import { fileWatcher } from "../watcher.js";
+import { type WatchedTarget, fileWatcher } from "../watcher.js";
 
 let isShuttingDown = false;
 
@@ -15,10 +15,8 @@ let isShuttingDown = false;
 async function handleShutdown(): Promise<void> {
 	if (isShuttingDown) return;
 	isShuttingDown = true;
-
 	process.off("SIGINT", handleShutdown);
 	process.off("SIGTERM", handleShutdown);
-
 	console.log("\nShutting down Firefox...");
 	await fileWatcher.close().catch(() => {});
 	await firefoxManager.terminateBrowser().catch(() => {});
@@ -71,6 +69,30 @@ async function processAndInjectCss(
 	}
 }
 
+/** Creates and registers a watched stylesheet target for live reloading. */
+function createWatchTarget(
+	filePath: string,
+	id: string,
+	targetType: StyleTarget,
+): WatchedTarget {
+	const target: WatchedTarget = {
+		filePaths: [filePath],
+		onChange: async () => {
+			const importedFiles = await processAndInjectCss(
+				filePath,
+				id,
+				targetType,
+			);
+			fileWatcher.updateFilePaths(target, [
+				filePath,
+				...(importedFiles || []),
+			]);
+		},
+	};
+	fileWatcher.addTarget(target);
+	return target;
+}
+
 /**
  * Starts a Firefox instance, compiles and injects theme stylesheets, and
  * initiates live watching.
@@ -88,43 +110,21 @@ export async function startCommand(
 		process.cwd(),
 		options.chromePath || "userChrome.css",
 	);
-
 	const contentPath = path.resolve(
 		process.cwd(),
 		options.contentPath || "userContent.css",
 	);
 
-	const chromeTarget = {
-		filePaths: [chromePath],
-		onChange: async () => {
-			const importedFiles = await processAndInjectCss(
-				chromePath,
-				ROOT_USER_CHROME_ID,
-				"chrome",
-			);
-			fileWatcher.updateFilePaths(chromeTarget, [
-				chromePath,
-				...(importedFiles || []),
-			]);
-		},
-	};
-	fileWatcher.addTarget(chromeTarget);
-
-	const contentTarget = {
-		filePaths: [contentPath],
-		onChange: async () => {
-			const importedFiles = await processAndInjectCss(
-				contentPath,
-				ROOT_USER_CONTENT_ID,
-				"content",
-			);
-			fileWatcher.updateFilePaths(contentTarget, [
-				contentPath,
-				...(importedFiles || []),
-			]);
-		},
-	};
-	fileWatcher.addTarget(contentTarget);
+	const chromeTarget = createWatchTarget(
+		chromePath,
+		ROOT_USER_CHROME_ID,
+		"chrome",
+	);
+	const contentTarget = createWatchTarget(
+		contentPath,
+		ROOT_USER_CONTENT_ID,
+		"content",
+	);
 
 	console.log("Launching Firefox instance...");
 	await firefoxManager.initialiseBrowser(
@@ -143,9 +143,7 @@ export async function startCommand(
 
 	await chromeTarget.onChange();
 	await contentTarget.onChange();
-
 	process.on("SIGINT", handleShutdown);
 	process.on("SIGTERM", handleShutdown);
-
 	void firefoxManager.waitForWindowClose().then(handleShutdown);
 }

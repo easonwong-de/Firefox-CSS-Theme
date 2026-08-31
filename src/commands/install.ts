@@ -9,10 +9,7 @@ import {
 import path from "node:path";
 import readline from "node:readline/promises";
 import { compileCssString } from "../processor.js";
-import {
-	listFirefoxProfiles,
-	resolveProfileDirectoryByName,
-} from "../profiles.js";
+import { listProfiles, resolveProfileDirectoryByName } from "../profiles.js";
 import type { InstallCommandOptions } from "../types.js";
 
 /**
@@ -50,7 +47,6 @@ async function installStylesheet(
 	existingCss?: string,
 ): Promise<void> {
 	if (!srcPath) return;
-
 	const sourceCss = readFileSync(srcPath, "utf8");
 	let mergedCss = sourceCss;
 
@@ -80,7 +76,7 @@ export async function installCommand(
 	let profileName = options.profileName;
 
 	if (!profileName) {
-		const profiles = listFirefoxProfiles();
+		const profiles = listProfiles();
 		if (profiles.length === 0) {
 			throw new Error("No Firefox profile detected.");
 		} else if (profiles.length === 1) {
@@ -103,13 +99,11 @@ export async function installCommand(
 		: existsSync(path.resolve(process.cwd(), "userChrome.css"))
 			? path.resolve(process.cwd(), "userChrome.css")
 			: undefined;
-
 	const srcContentPath = options.contentPath
 		? path.resolve(process.cwd(), options.contentPath)
 		: existsSync(path.resolve(process.cwd(), "userContent.css"))
 			? path.resolve(process.cwd(), "userContent.css")
 			: undefined;
-
 	if (!srcChromePath && !srcContentPath) {
 		console.warn("No stylesheet files found to install.");
 		return;
@@ -117,7 +111,6 @@ export async function installCommand(
 
 	const destChromePath = path.join(chromeDir, "userChrome.css");
 	const destContentPath = path.join(chromeDir, "userContent.css");
-
 	const existingChromeCss =
 		options.merge && existsSync(destChromePath)
 			? readFileSync(destChromePath, "utf8")
@@ -142,13 +135,11 @@ export async function installCommand(
 			input: process.stdin,
 			output: process.stdout,
 		});
-
 		const warningAction = options.merge ? "merged" : "overwritten";
 		const userResponse = await readlineInterface.question(
 			`\x1b[33m[warning]\x1b[0m Existing theme files will be ${warningAction} in profile "${profileName}". Proceed? (y/N) `,
 		);
 		readlineInterface.close();
-
 		if (userResponse.trim().toLowerCase() !== "y") {
 			console.log("Install operation cancelled.");
 			return;

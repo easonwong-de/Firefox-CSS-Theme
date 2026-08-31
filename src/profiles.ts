@@ -8,8 +8,7 @@ import type { FirefoxProfileInfo } from "./types.js";
  * profiles are located.
  */
 export function getFirefoxConfigurationDirectory(): string {
-	const platformName = process.platform;
-	if (platformName === "darwin") {
+	if (process.platform === "darwin") {
 		return path.join(
 			os.homedir(),
 			"Library",
@@ -17,7 +16,7 @@ export function getFirefoxConfigurationDirectory(): string {
 			"Firefox",
 		);
 	}
-	if (platformName === "win32") {
+	if (process.platform === "win32") {
 		const applicationDataDirectory =
 			process.env.APPDATA ||
 			path.join(os.homedir(), "AppData", "Roaming");
@@ -30,7 +29,7 @@ export function getFirefoxConfigurationDirectory(): string {
  * Parses the Firefox profiles.ini configuration file to extract profile
  * records.
  */
-export function listFirefoxProfiles(
+export function listProfiles(
 	customConfigurationDirectory?: string,
 ): FirefoxProfileInfo[] {
 	const configurationDirectory =
@@ -46,30 +45,31 @@ export function listFirefoxProfiles(
 	let currentSection: string | null = null;
 	let currentProfileData: Partial<FirefoxProfileInfo> = {};
 
-	for (const line of iniLines) {
-		const trimmedLine = line.trim();
-		if (trimmedLine.startsWith("[") && trimmedLine.endsWith("]")) {
-			if (
-				currentSection &&
-				currentSection.toLowerCase().startsWith("profile") &&
-				currentProfileData.name &&
-				currentProfileData.path
-			) {
-				const isRelative = currentProfileData.isRelative ?? true;
-				const resolvedPath = isRelative
+	const pushProfileRecord = (): void => {
+		if (
+			currentSection?.toLowerCase().startsWith("profile") &&
+			currentProfileData.name &&
+			currentProfileData.path
+		) {
+			const isRelative = currentProfileData.isRelative ?? true;
+			profileRecords.push({
+				name: currentProfileData.name,
+				path: isRelative
 					? path.resolve(
 							configurationDirectory,
 							currentProfileData.path,
 						)
-					: currentProfileData.path;
+					: currentProfileData.path,
+				isRelative: isRelative,
+				isDefault: Boolean(currentProfileData.isDefault),
+			});
+		}
+	};
 
-				profileRecords.push({
-					name: currentProfileData.name,
-					path: resolvedPath,
-					isRelative: isRelative,
-					isDefault: Boolean(currentProfileData.isDefault),
-				});
-			}
+	for (const line of iniLines) {
+		const trimmedLine = line.trim();
+		if (trimmedLine.startsWith("[") && trimmedLine.endsWith("]")) {
+			pushProfileRecord();
 			currentSection = trimmedLine.slice(1, -1);
 			currentProfileData = {};
 			continue;
@@ -87,31 +87,13 @@ export function listFirefoxProfiles(
 		if (key === "Default") currentProfileData.isDefault = value === "1";
 	}
 
-	if (
-		currentSection &&
-		currentSection.toLowerCase().startsWith("profile") &&
-		currentProfileData.name &&
-		currentProfileData.path
-	) {
-		const isRelative = currentProfileData.isRelative ?? true;
-		const resolvedPath = isRelative
-			? path.resolve(configurationDirectory, currentProfileData.path)
-			: currentProfileData.path;
-
-		profileRecords.push({
-			name: currentProfileData.name,
-			path: resolvedPath,
-			isRelative: isRelative,
-			isDefault: Boolean(currentProfileData.isDefault),
-		});
-	}
-
+	pushProfileRecord();
 	return profileRecords;
 }
 
 /** Resolves a registered Firefox profile name to its filesystem directory path. */
 export function resolveProfileDirectoryByName(profileName: string): string {
-	const profiles = listFirefoxProfiles();
+	const profiles = listProfiles();
 	const matchedProfile = profiles.find(
 		(profile) => profile.name === profileName,
 	);

@@ -9,7 +9,7 @@ export {
 } from "./registry.js";
 export {
 	getFirefoxConfigurationDirectory,
-	listFirefoxProfiles,
+	listProfiles as listFirefoxProfiles,
 	resolveProfileDirectoryByName,
 } from "./profiles.js";
 export { FileWatcher, fileWatcher } from "./watcher.js";

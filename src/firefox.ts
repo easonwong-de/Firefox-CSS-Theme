@@ -42,20 +42,21 @@ export class FirefoxManager {
 		options.addArguments("-no-remote", "-new-instance");
 		if (isHeadlessEnabled) options.addArguments("-headless");
 
-		options.setPreference("devtools.chrome.enabled", true);
-		options.setPreference("devtools.debugger.remote-enabled", true);
-		options.setPreference("devtools.debugger.prompt-connection", false);
-		options.setPreference(
-			"toolkit.legacyUserProfileCustomizations.stylesheets",
-			true,
-		);
-		options.setPreference("marionette.allow-system-access", true);
-		options.setPreference("remote.allow-system-access", true);
-		options.setPreference("browser.nova.enabled", isNovaUiEnabled);
-		options.setPreference(
-			"browser.newtabpage.activity-stream.nova.enabled",
-			isNovaUiEnabled,
-		);
+		options
+			.setPreference("devtools.chrome.enabled", true)
+			.setPreference("devtools.debugger.remote-enabled", true)
+			.setPreference("devtools.debugger.prompt-connection", false)
+			.setPreference(
+				"toolkit.legacyUserProfileCustomizations.stylesheets",
+				true,
+			)
+			.setPreference("marionette.allow-system-access", true)
+			.setPreference("remote.allow-system-access", true)
+			.setPreference("browser.nova.enabled", isNovaUiEnabled)
+			.setPreference(
+				"browser.newtabpage.activity-stream.nova.enabled",
+				isNovaUiEnabled,
+			);
 
 		if (binaryPath) options.setBinary(binaryPath);
 		if (profileName) {
@@ -136,17 +137,11 @@ export class FirefoxManager {
 	public async queryElements(selector: string): Promise<UiElementDetails[]> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<UiElementDetails[]>(
-			(querySelector: string) => {
-				const matchedElements = Array.from(
+		return this.executeChromeScript<UiElementDetails[]>(
+			(querySelector: string) =>
+				Array.from(
 					document.querySelectorAll(querySelector),
-				);
-				return matchedElements.map((element) => {
-					const attributeMap: Record<string, string> = {};
-					for (const attribute of Array.from(element.attributes)) {
-						attributeMap[attribute.name] = attribute.value;
-					}
-					return {
+					(element) => ({
 						tagName: element.tagName.toLowerCase(),
 						id: element.id || "",
 						className: element.className || "",
@@ -154,10 +149,14 @@ export class FirefoxManager {
 						textContent: (element.textContent || "")
 							.trim()
 							.slice(0, 100),
-						attributes: attributeMap,
-					};
-				});
-			},
+						attributes: Object.fromEntries(
+							Array.from(element.attributes, (attribute) => [
+								attribute.name,
+								attribute.value,
+							]),
+						),
+					}),
+				),
 			selector,
 		);
 	}
@@ -169,7 +168,7 @@ export class FirefoxManager {
 	): Promise<Record<string, string>> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<Record<string, string>>(
+		return this.executeChromeScript<Record<string, string>>(
 			(targetSelector: string, requestedProperties?: string[]) => {
 				const targetElement = document.querySelector(targetSelector);
 				if (!targetElement) {
@@ -179,30 +178,15 @@ export class FirefoxManager {
 				}
 				const computedStyleDeclaration =
 					window.getComputedStyle(targetElement);
+				const propertyNames =
+					requestedProperties && requestedProperties.length > 0
+						? requestedProperties
+						: Array.from(computedStyleDeclaration);
 				const styleResult: Record<string, string> = {};
 
-				if (
-					Array.isArray(requestedProperties) &&
-					requestedProperties.length > 0
-				) {
-					for (const propertyName of requestedProperties) {
-						styleResult[propertyName] =
-							computedStyleDeclaration.getPropertyValue(
-								propertyName,
-							);
-					}
-				} else {
-					for (
-						let index = 0;
-						index < computedStyleDeclaration.length;
-						index++
-					) {
-						const propertyName = computedStyleDeclaration[index];
-						styleResult[propertyName] =
-							computedStyleDeclaration.getPropertyValue(
-								propertyName,
-							);
-					}
+				for (const propertyName of propertyNames) {
+					styleResult[propertyName] =
+						computedStyleDeclaration.getPropertyValue(propertyName);
 				}
 
 				return styleResult;
@@ -222,7 +206,7 @@ export class FirefoxManager {
 	): Promise<UiNodeHierarchy> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<UiNodeHierarchy>(
+		return this.executeChromeScript<UiNodeHierarchy>(
 			(targetSelector: string, maximumTraversalDepth: number) => {
 				const rootTarget =
 					targetSelector === "window"
@@ -240,14 +224,14 @@ export class FirefoxManager {
 					tagName: rootTarget.tagName.toLowerCase(),
 					id: rootTarget.id || "",
 					className: rootTarget.className || "",
-					attributes: {},
+					attributes: Object.fromEntries(
+						Array.from(rootTarget.attributes, (attribute) => [
+							attribute.name,
+							attribute.value,
+						]),
+					),
 					children: [],
 				};
-
-				for (const attribute of Array.from(rootTarget.attributes)) {
-					rootNodeHierarchy.attributes[attribute.name] =
-						attribute.value;
-				}
 
 				const nodeQueue: Array<{
 					domNode: Element;
@@ -273,18 +257,19 @@ export class FirefoxManager {
 					for (const childElement of Array.from(
 						queueItem.domNode.children,
 					)) {
-						const childAttributes: Record<string, string> = {};
-						for (const attribute of Array.from(
-							childElement.attributes,
-						)) {
-							childAttributes[attribute.name] = attribute.value;
-						}
-
 						const childHierarchyNode: UiNodeHierarchy = {
 							tagName: childElement.tagName.toLowerCase(),
 							id: childElement.id || "",
 							className: childElement.className || "",
-							attributes: childAttributes,
+							attributes: Object.fromEntries(
+								Array.from(
+									childElement.attributes,
+									(attribute) => [
+										attribute.name,
+										attribute.value,
+									],
+								),
+							),
 							children: [],
 						};
 
@@ -312,7 +297,7 @@ export class FirefoxManager {
 	): Promise<ToolbarCustomisationResult> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<ToolbarCustomisationResult>(
+		return this.executeChromeScript<ToolbarCustomisationResult>(
 			async (requestedAction: ToolbarCustomisationAction) => {
 				const customizeMode = window.gCustomizeMode;
 				const documentElement = document.documentElement;
@@ -395,7 +380,7 @@ export class FirefoxManager {
 				}
 
 				existingStyleElement.textContent = cssSource;
-				return { id: id, success: true };
+				return { id, success: true };
 			},
 			id,
 			css,
@@ -447,7 +432,7 @@ export class FirefoxManager {
 					sss.loadAndRegisterSheet(newUri, sss.USER_SHEET);
 				}
 				win.__injectedContentSheets.set(id, newUriStr);
-				return { id: id, success: true };
+				return { id, success: true };
 			},
 			id,
 			css,
@@ -466,9 +451,9 @@ export class FirefoxManager {
 				const targetStyleElement = document.getElementById(id);
 				if (targetStyleElement) {
 					targetStyleElement.remove();
-					return { id: id, removed: true };
+					return { id, removed: true };
 				}
-				return { id: id, removed: false };
+				return { id, removed: false };
 			},
 			id,
 		);
@@ -508,7 +493,7 @@ export class FirefoxManager {
 					win.__injectedContentSheets.delete(id);
 				}
 
-				return { id: id, removed: removed };
+				return { id, removed };
 			},
 			id,
 		);
@@ -523,25 +508,19 @@ export class FirefoxManager {
 
 		const domStyles = await this.executeChromeScript<
 			Array<{ id: string; length: number }>
-		>(() => {
-			const styleElements = Array.from(
-				document.querySelectorAll("style[id]"),
-			);
-			return styleElements.map((element) => ({
+		>(() =>
+			Array.from(document.querySelectorAll("style[id]"), (element) => ({
 				id: element.id,
 				length: element.textContent ? element.textContent.length : 0,
-			}));
-		});
+			})),
+		);
 
-		return domStyles.map((item) => {
-			const registration = styleRegistry.get(item.id);
-			return {
-				id: item.id,
-				length: item.length,
-				srcPath: registration?.srcPath,
-				target: "chrome" as StyleTarget,
-			};
-		});
+		return domStyles.map((item) => ({
+			id: item.id,
+			length: item.length,
+			srcPath: styleRegistry.get(item.id)?.srcPath,
+			target: "chrome" as StyleTarget,
+		}));
 	}
 
 	/** Lists all active userContent style sheets registered in memory. */
@@ -552,35 +531,24 @@ export class FirefoxManager {
 			Array<{ id: string; length: number }>
 		>(() => {
 			const win = window as any;
-			const styles: Array<{ id: string; length: number }> = [];
-			if (win.__injectedContentSheets) {
-				for (const [
+			if (!win.__injectedContentSheets) return [];
+			return Array.from(
+				win.__injectedContentSheets.entries(),
+				([id, uriStr]: [string, string]) => ({
 					id,
-					uriStr,
-				] of win.__injectedContentSheets.entries()) {
-					styles.push({
-						id: id,
-						length: decodeURIComponent(
-							uriStr.replace(
-								/^data:text\/css;charset=utf-8,/,
-								"",
-							),
-						).length,
-					});
-				}
-			}
-			return styles;
+					length: decodeURIComponent(
+						uriStr.replace(/^data:text\/css;charset=utf-8,/, ""),
+					).length,
+				}),
+			);
 		});
 
-		return contentStyles.map((item) => {
-			const registration = styleRegistry.get(item.id);
-			return {
-				id: item.id,
-				length: item.length,
-				srcPath: registration?.srcPath,
-				target: "content" as StyleTarget,
-			};
-		});
+		return contentStyles.map((item) => ({
+			id: item.id,
+			length: item.length,
+			srcPath: styleRegistry.get(item.id)?.srcPath,
+			target: "content" as StyleTarget,
+		}));
 	}
 
 	/**
@@ -592,24 +560,18 @@ export class FirefoxManager {
 	): Promise<ScreenshotResult> {
 		await this.ensureChromeContext();
 
-		if (targetSelector) {
-			const targetWebElement = await this.driver!.findElement(
-				By.css(targetSelector),
-			);
-			const elementScreenshotBase64 =
-				await targetWebElement.takeScreenshot();
-			return { base64Image: elementScreenshotBase64, format: "png" };
-		}
-
-		const fullWindowScreenshotBase64 = await this.driver!.takeScreenshot();
-		return { base64Image: fullWindowScreenshotBase64, format: "png" };
+		const screenshotTarget = targetSelector
+			? await this.driver!.findElement(By.css(targetSelector))
+			: this.driver!;
+		const base64Image = await screenshotTarget.takeScreenshot();
+		return { base64Image, format: "png" };
 	}
 
 	/** Launches the Firefox Browser Toolbox developer tools window. */
 	private async openBrowserToolbox(): Promise<BrowserToolboxResult> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<BrowserToolboxResult>(() => {
+		return this.executeChromeScript<BrowserToolboxResult>(() => {
 			try {
 				const { BrowserToolboxLauncher } =
 					ChromeUtils.importESModule<BrowserToolboxLauncherModule>(

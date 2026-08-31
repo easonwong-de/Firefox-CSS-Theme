@@ -6,8 +6,8 @@ export type WatchEventType = "add" | "change" | "unlink";
 export interface WatchedTarget {
 	filePaths: string[];
 	onChange: (
-		eventType: WatchEventType,
-		changedFilePath: string,
+		eventType?: WatchEventType,
+		changedFilePath?: string,
 	) => Promise<void> | void;
 }
 
@@ -85,15 +85,15 @@ export class FileWatcher {
 	public async start(): Promise<void> {
 		if (this.fileSystemWatcher) return;
 
-		const targetPaths: string[] = [];
-		for (const target of this.targets) {
-			for (const filePath of target.filePaths) {
-				const fullPath = path.resolve(process.cwd(), filePath);
-				if (!targetPaths.includes(fullPath)) {
-					targetPaths.push(fullPath);
-				}
-			}
-		}
+		const targetPaths = Array.from(
+			new Set(
+				Array.from(this.targets).flatMap((target) =>
+					target.filePaths.map((filePath) =>
+						path.resolve(process.cwd(), filePath),
+					),
+				),
+			),
+		);
 
 		this.fileSystemWatcher = watch(targetPaths, {
 			awaitWriteFinish: { pollInterval: 50, stabilityThreshold: 100 },
@@ -136,17 +136,13 @@ export class FileWatcher {
 		eventType: WatchEventType,
 		changedFilePath: string,
 	): void {
-		const fullChangedPath = path.resolve(
-			process.cwd(),
-			changedFilePath,
-		);
+		const fullChangedPath = path.resolve(process.cwd(), changedFilePath);
 
 		for (const target of this.targets) {
-			const targetFullPaths = target.filePaths.map((filePath) =>
-				path.resolve(process.cwd(), filePath),
+			const isMatch = target.filePaths.some(
+				(filePath) =>
+					path.resolve(process.cwd(), filePath) === fullChangedPath,
 			);
-
-			const isMatch = targetFullPaths.includes(fullChangedPath);
 
 			if (isMatch) {
 				const existingTimer = this.timers.get(target);
