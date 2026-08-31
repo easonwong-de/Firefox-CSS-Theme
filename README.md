@@ -28,7 +28,7 @@ Once installed, run it directly with `npx firefox-css-theme [command] [option]` 
 		"create": "firefox-css-theme create", // scaffold starter userChrome.css and userContent.css files
 		"start": "firefox-css-theme start", // launch Firefox with live stylesheet bundling and hot-reloading
 		"profiles": "firefox-css-theme profiles", // list all detected Firefox profiles
-		"install": "firefox-css-theme install" // install compiled stylesheets into a Firefox profile's chrome folder
+		"install:theme": "firefox-css-theme install" // install compiled stylesheets into a Firefox profile's chrome folder
 	}
 }
 ```
