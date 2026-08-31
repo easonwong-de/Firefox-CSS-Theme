@@ -20,15 +20,15 @@ Install as a development dependency within your theme repository:
 npm install --save-dev firefox-css-theme
 ```
 
-You can add workflow scripts to your `package.json`:
+Once installed, run it directly with `npx firefox-css-theme [command] [option]` or use `firefox-css-theme` in your npm scripts:
 
 ```json
 {
 	"scripts": {
-		"create": "firefox-css-theme create",
-		"start": "firefox-css-theme start",
-		"profiles": "firefox-css-theme profiles",
-		"save": "firefox-css-theme save"
+		"create": "firefox-css-theme create", // scaffold starter userChrome.css and userContent.css files
+		"start": "firefox-css-theme start", // launch Firefox with live stylesheet bundling and hot-reloading
+		"profiles": "firefox-css-theme profiles", // list all detected Firefox profiles
+		"save": "firefox-css-theme save" // save compiled stylesheets into a Firefox profile's chrome folder
 	}
 }
 ```
@@ -36,81 +36,100 @@ You can add workflow scripts to your `package.json`:
 > [!NOTE]
 > `userChrome.css` and `userContent.css` must be located at the project root directory by default; otherwise, specify their paths using the `-c, --chrome` and `-u, --content` options.
 
-### Scaffold Theme Files
+For the full list of CLI options, run `npx firefox-css-theme --help` in your project.
 
-Generate boilerplate `userChrome.css` and `userContent.css` files with Firefox namespace headers:
+## Command Line Interface
 
-```bash
-npm run create
-```
+### `firefox-css-theme create`
 
-Options:
+Scaffold starter `userChrome.css` and `userContent.css` boilerplate files with Firefox namespace headers.
 
-- `-c, --chrome <path>`: Custom output path for `userChrome.css`.
-- `-u, --content <path>`: Custom output path for `userContent.css`.
-- `-f, --force`: Overwrite existing files.
-
-### Start Live Development Session
-
-Launch Firefox with hot stylesheet reloading:
+#### Usage
 
 ```bash
-npm run start
+firefox-css-theme create [options]
 ```
 
-Options:
+#### Options
 
-- `-p, --profile <name>`: Designate a specific existing Firefox profile by name. If omitted, Firefox runs in an isolated temporary profile that is automatically created and deleted on exit.
-- `-c, --chrome <path>`: Custom path to `userChrome.css`.
-- `-u, --content <path>`: Custom path to `userContent.css`.
-- `--no-watch`: Disable file watching and live reloading.
-- `--headless`: Run Firefox in headless mode.
-- `--nova-ui`: Enable Firefox Nova UI redesign preferences.
-- `--binary <path>`: Path to custom Firefox executable binary.
+| Option                 | Description                                                             |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `-c, --chrome <path>`  | Custom output path for `userChrome.css` (default: `./userChrome.css`)   |
+| `-u, --content <path>` | Custom output path for `userContent.css` (default: `./userContent.css`) |
+| `-f, --force`          | Overwrite existing files without confirmation                           |
 
-### Discover Available Profiles
+### `firefox-css-theme start`
 
-List all detected Firefox profiles:
+Launch Firefox with live stylesheet bundling and hot-reloading.
+
+#### Usage
 
 ```bash
-npm run profiles
+firefox-css-theme start [options]
 ```
 
-### Save Theme to Profile
+#### Options
 
-Compile and save stylesheets directly into a profile's `chrome/` directory:
+| Option                 | Description                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| `-p, --profile <name>` | Designate an existing Firefox profile by name (temporary profile if omitted) |
+| `-c, --chrome <path>`  | Custom path to `userChrome.css` (default: `./userChrome.css`)                         |
+| `-u, --content <path>` | Custom path to `userContent.css` (default: `./userContent.css`)                       |
+| `--no-watch`           | Disable file watching and live reloading                                              |
+| `--headless`           | Run Firefox in headless mode                                                          |
+| `--nova-ui`            | Enable Firefox Nova UI redesign preferences                                           |
+| `--binary <path>`      | Path to custom Firefox executable binary                                              |
+
+### `firefox-css-theme profiles`
+
+List all detected Firefox profiles and their directory paths.
+
+#### Usage
 
 ```bash
-npm run save -- --profile <name>
+firefox-css-theme profiles
 ```
 
-Options:
+### `firefox-css-theme save`
 
-- `-p, --profile <name>`: Target Firefox profile name (mandatory if multiple profiles exist).
-- `-c, --chrome <path>`: Custom path to `userChrome.css`.
-- `-u, --content <path>`: Custom path to `userContent.css`.
-- `-f, --force`: Overwrite without confirmation prompt.
+Compile and save stylesheets directly into a Firefox profile's `chrome/` directory.
+
+#### Usage
+
+```bash
+firefox-css-theme save [options]
+```
+
+#### Options
+
+| Option                 | Description                                                               |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `-p, --profile <name>` | Target Firefox profile name (mandatory if multiple profiles exist)        |
+| `-c, --chrome <path>`  | Custom path to `userChrome.css` (default: `./userChrome.css`)             |
+| `-u, --content <path>` | Custom path to `userContent.css` (default: `./userContent.css`)           |
+| `-f, --force`          | Overwrite existing theme files in the profile without confirmation prompt |
 
 > [!WARNING]
 > This operation will overwrite existing CSS themes in the profile. A backup is advised.
 
-## CLI Usage
+### `firefox-css-theme mcp`
 
-You can also run commands on demand without local installation using `npx firefox-css-theme [command] [option]`.
+Start the Model Context Protocol (MCP) server over standard I/O for AI-assisted inspection and styling.
 
+#### Usage
+
+```bash
+firefox-css-theme mcp [options]
 ```
-Options:
-  -v, --version     Show version number
-  -h, --help        display help for command
 
-Commands:
-  create [options]  Scaffold starter userChrome.css and userContent.css files
-  start [options]   Launch Firefox with live stylesheet bundling and hot-reloading
-  profiles          List all detected Firefox profiles
-  save [options]    Save compiled stylesheets into a Firefox profile's chrome folder
-  mcp [options]     Start the Model Context Protocol (MCP) server
-  help [command]    display help for command
-```
+#### Options
+
+| Option                 | Description                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| `-p, --profile <name>` | Designate an existing Firefox profile by name (isolated temporary profile if omitted) |
+| `--nova-ui`            | Enable Firefox Nova UI redesign preferences                                           |
+| `--headless`           | Run Firefox in headless mode                                                          |
+| `--binary <path>`      | Path to custom Firefox executable binary                                              |
 
 ## MCP Server Usage
 
