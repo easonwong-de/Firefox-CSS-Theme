@@ -94,11 +94,12 @@ export interface StartCommandOptions {
 	watch?: boolean;
 }
 
-export interface SaveCommandOptions {
+export interface InstallCommandOptions {
 	chromePath?: string;
 	contentPath?: string;
-	force?: boolean;
+	merge?: boolean;
 	profileName?: string;
+	force?: boolean;
 }
 
 export interface McpCommandOptions {

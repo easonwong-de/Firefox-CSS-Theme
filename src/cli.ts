@@ -6,7 +6,7 @@ import { Command } from "commander";
 import { createCommand } from "./commands/create.js";
 import { startMcpServer } from "./commands/mcp.js";
 import { profilesCommand } from "./commands/profiles.js";
-import { saveCommand } from "./commands/save.js";
+import { installCommand } from "./commands/install.js";
 import { startCommand } from "./commands/start.js";
 
 const packageJson = JSON.parse(
@@ -88,26 +88,29 @@ program
 	});
 
 program
-	.command("save")
+	.command("install")
 	.description(
-		"Save compiled stylesheets into a Firefox profile's chrome folder",
+		"Install compiled stylesheets into a Firefox profile's chrome folder",
 	)
 	.option("-p, --profile <name>", "Target Firefox profile name")
 	.option("-c, --chrome <path>", "Path to userChrome.css")
 	.option("-u, --content <path>", "Path to userContent.css")
+	.option("-m, --merge", "Merge with existing theme stylesheets")
 	.option("-f, --force", "Overwrite existing files without confirmation")
 	.action(
 		async (options: {
 			chrome?: string;
 			content?: string;
-			force?: boolean;
+			merge?: boolean;
 			profile?: string;
+			force?: boolean;
 		}) => {
-			await saveCommand({
+			await installCommand({
 				chromePath: options.chrome,
 				contentPath: options.content,
-				force: options.force,
+				merge: options.merge,
 				profileName: options.profile,
+				force: options.force,
 			});
 		},
 	);

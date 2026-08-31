@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/firefox-css-theme)](https://www.npmjs.com/package/firefox-css-theme)
 [![Test](https://github.com/easonwong-de/Firefox-CSS-Theme/actions/workflows/test.yml/badge.svg)](https://github.com/easonwong-de/Firefox-CSS-Theme/actions/workflows/test.yml)
 
-A CLI toolkit for scaffolding, compiling, live-debugging, and watching Firefox UI and CSS themes (`userChrome.css` and `userContent.css`). It also provides a Model Context Protocol (MCP) server for AI-assisted inspection and styling.
+A CLI toolkit for scaffolding, compiling, live-debugging, and installing Firefox UI and CSS themes (`userChrome.css` and `userContent.css`). It also provides a Model Context Protocol (MCP) server for AI-assisted inspection and styling.
 
 ## Requirements
 
@@ -28,7 +28,7 @@ Once installed, run it directly with `npx firefox-css-theme [command] [option]` 
 		"create": "firefox-css-theme create", // scaffold starter userChrome.css and userContent.css files
 		"start": "firefox-css-theme start", // launch Firefox with live stylesheet bundling and hot-reloading
 		"profiles": "firefox-css-theme profiles", // list all detected Firefox profiles
-		"save": "firefox-css-theme save" // save compiled stylesheets into a Firefox profile's chrome folder
+		"install": "firefox-css-theme install" // install compiled stylesheets into a Firefox profile's chrome folder
 	}
 }
 ```
@@ -90,14 +90,14 @@ List all detected Firefox profiles and their directory paths.
 firefox-css-theme profiles
 ```
 
-### `firefox-css-theme save`
+### `firefox-css-theme install`
 
-Compile and save stylesheets directly into a Firefox profile's `chrome/` directory.
+Compile and install stylesheets directly into a Firefox profile's `chrome/` directory.
 
 #### Usage
 
 ```bash
-firefox-css-theme save [options]
+firefox-css-theme install [options]
 ```
 
 #### Options
@@ -107,6 +107,7 @@ firefox-css-theme save [options]
 | `-p, --profile <name>` | Target Firefox profile name (mandatory if multiple profiles exist)        |
 | `-c, --chrome <path>`  | Custom path to `userChrome.css` (default: `./userChrome.css`)             |
 | `-u, --content <path>` | Custom path to `userContent.css` (default: `./userContent.css`)           |
+| `-m, --merge`          | Merge with existing theme stylesheets instead of overwriting              |
 | `-f, --force`          | Overwrite existing theme files in the profile without confirmation prompt |
 
 > [!WARNING]
