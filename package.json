@@ -1,6 +1,6 @@
 {
 	"name": "firefox-css-theme",
-	"version": "0.2.4",
+	"version": "0.2.5",
 	"description": "CLI toolkit and Model Context Protocol server for building, inspecting, and live-debugging Firefox UI and CSS themes.",
 	"homepage": "https://github.com/easonwong-de/Firefox-CSS-Theme#readme",
 	"bugs": {
@@ -32,10 +32,10 @@
 		"@modelcontextprotocol/sdk": "^1.30.0",
 		"chokidar": "^5.0.0",
 		"commander": "^15.0.0",
-		"postcss": "^8.5.3",
+		"postcss": "^8.5.26",
 		"postcss-import": "^17.0.0",
 		"selenium-webdriver": "^4.48.0",
-		"zod": "^4.4.3"
+		"zod": "^4.5.4"
 	},
 	"devDependencies": {
 		"@types/node": "^26.4.0",
@@ -43,7 +43,7 @@
 		"@types/selenium-webdriver": "^4.35.6",
 		"prettier": "^3.9.6",
 		"prettier-plugin-jsdoc": "^1.8.1",
-		"tsx": "^4.23.12",
+		"tsx": "^4.23.13",
 		"typescript": "^7.0.2"
 	}
 }
