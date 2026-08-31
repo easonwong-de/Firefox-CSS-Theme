@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import postcss from "postcss";
 import postcssImport from "postcss-import";
@@ -22,32 +22,17 @@ export async function compileCssString(
 	return { css: output.css, importedFiles: importedFiles };
 }
 
-/**
- * Compiles a CSS file, inlines @import rules via PostCSS, and optionally writes
- * the output bundle to a destination path.
- */
+/** Compiles a CSS file and inlines @import rules via PostCSS. */
 export async function compileCssFile(
 	srcPath: string,
-	destPath?: string,
 ): Promise<CssCompilationResult> {
-	const absoluteSrcPath = path.resolve(process.cwd(), srcPath);
-	if (!existsSync(absoluteSrcPath)) {
+	const fullSrcPath = path.resolve(process.cwd(), srcPath);
+	if (!existsSync(fullSrcPath)) {
 		throw new Error(
-			`Stylesheet file does not exist at path: ${absoluteSrcPath}`,
+			`Stylesheet file does not exist at path: ${fullSrcPath}`,
 		);
 	}
 
-	const sourceContent = readFileSync(absoluteSrcPath, "utf8");
-	const result = await compileCssString(sourceContent, absoluteSrcPath);
-
-	if (destPath) {
-		const absoluteDestPath = path.resolve(process.cwd(), destPath);
-		const destDir = path.dirname(absoluteDestPath);
-		if (!existsSync(destDir)) {
-			mkdirSync(destDir, { recursive: true });
-		}
-		writeFileSync(absoluteDestPath, result.css, "utf8");
-	}
-
-	return result;
+	const content = readFileSync(fullSrcPath, "utf8");
+	return await compileCssString(content, fullSrcPath);
 }

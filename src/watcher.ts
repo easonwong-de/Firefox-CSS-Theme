@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import path from "node:path";
 import { type FSWatcher, watch } from "chokidar";
 
@@ -37,23 +36,23 @@ export class FileWatcher {
 		target: WatchedTarget,
 		nextFilePaths: string[],
 	): void {
-		const previousAbsolutePaths = target.filePaths.map((filePath) =>
+		const previousFullPaths = target.filePaths.map((filePath) =>
 			path.resolve(process.cwd(), filePath),
 		);
-		const nextAbsolutePaths = nextFilePaths.map((filePath) =>
+		const nextFullPaths = nextFilePaths.map((filePath) =>
 			path.resolve(process.cwd(), filePath),
 		);
 
 		target.filePaths = nextFilePaths;
 
 		if (this.fileSystemWatcher) {
-			for (const previousPath of previousAbsolutePaths) {
-				if (!nextAbsolutePaths.includes(previousPath)) {
+			for (const previousPath of previousFullPaths) {
+				if (!nextFullPaths.includes(previousPath)) {
 					this.fileSystemWatcher.unwatch(previousPath);
 				}
 			}
-			for (const nextPath of nextAbsolutePaths) {
-				if (!previousAbsolutePaths.includes(nextPath)) {
+			for (const nextPath of nextFullPaths) {
+				if (!previousFullPaths.includes(nextPath)) {
 					this.fileSystemWatcher.add(nextPath);
 				}
 			}
@@ -89,9 +88,9 @@ export class FileWatcher {
 		const targetPaths: string[] = [];
 		for (const target of this.targets) {
 			for (const filePath of target.filePaths) {
-				const absolutePath = path.resolve(process.cwd(), filePath);
-				if (!targetPaths.includes(absolutePath)) {
-					targetPaths.push(absolutePath);
+				const fullPath = path.resolve(process.cwd(), filePath);
+				if (!targetPaths.includes(fullPath)) {
+					targetPaths.push(fullPath);
 				}
 			}
 		}
@@ -132,21 +131,22 @@ export class FileWatcher {
 		}
 	}
 
+	/** Handles detected file change events with target matching and debouncing. */
 	private handleFileChange(
 		eventType: WatchEventType,
 		changedFilePath: string,
 	): void {
-		const absoluteChangedPath = path.resolve(
+		const fullChangedPath = path.resolve(
 			process.cwd(),
 			changedFilePath,
 		);
 
 		for (const target of this.targets) {
-			const targetAbsolutePaths = target.filePaths.map((filePath) =>
+			const targetFullPaths = target.filePaths.map((filePath) =>
 				path.resolve(process.cwd(), filePath),
 			);
 
-			const isMatch = targetAbsolutePaths.includes(absoluteChangedPath);
+			const isMatch = targetFullPaths.includes(fullChangedPath);
 
 			if (isMatch) {
 				const existingTimer = this.timers.get(target);
@@ -154,7 +154,7 @@ export class FileWatcher {
 
 				const newTimer = setTimeout(async () => {
 					this.timers.delete(target);
-					await target.onChange(eventType, absoluteChangedPath);
+					await target.onChange(eventType, fullChangedPath);
 				}, 100);
 
 				this.timers.set(target, newTimer);

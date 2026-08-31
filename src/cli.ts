@@ -136,6 +136,7 @@ program
 		},
 	);
 
+/** Main CLI entry point for command parsing and execution. */
 async function main(): Promise<void> {
 	const scriptBinaryName = path.basename(process.argv[1] || "");
 

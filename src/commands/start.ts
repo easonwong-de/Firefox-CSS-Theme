@@ -2,14 +2,35 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { firefoxManager } from "../firefox.js";
 import { compileCssFile } from "../processor.js";
-import { resolveProfileDirectoryByName } from "../profiles.js";
 import { ROOT_USER_CHROME_ID, ROOT_USER_CONTENT_ID } from "../registry.js";
 import type { StartCommandOptions, StyleTarget } from "../types.js";
 import { fileWatcher } from "../watcher.js";
 
+let isShuttingDown = false;
+
+/**
+ * Shuts down the active file watcher, terminates the browser instance, and
+ * exits the process.
+ */
+async function handleShutdown(): Promise<void> {
+	if (isShuttingDown) return;
+	isShuttingDown = true;
+
+	process.off("SIGINT", handleShutdown);
+	process.off("SIGTERM", handleShutdown);
+
+	console.log("\nShutting down Firefox...");
+	await fileWatcher.close().catch(() => {});
+	await firefoxManager.terminateBrowser().catch(() => {});
+	process.exit(0);
+}
+
+/**
+ * Compiles a stylesheet file and injects the output into the browser chrome or
+ * content context.
+ */
 async function processAndInjectCss(
 	srcPath: string,
-	destPath: string,
 	id: string,
 	target: StyleTarget,
 ): Promise<string[] | undefined> {
@@ -23,7 +44,7 @@ async function processAndInjectCss(
 	}
 
 	try {
-		const compilationResult = await compileCssFile(srcPath, destPath);
+		const compilationResult = await compileCssFile(srcPath);
 
 		if (target === "content") {
 			await firefoxManager.injectContentStyle(
@@ -57,47 +78,32 @@ async function processAndInjectCss(
 export async function startCommand(
 	options: StartCommandOptions = {},
 ): Promise<void> {
-	let profileDirectory: string | undefined;
-
 	if (options.profileName) {
-		profileDirectory = resolveProfileDirectoryByName(options.profileName);
 		console.log(`Using profile: \x1b[1m${options.profileName}\x1b[0m`);
 	} else {
 		console.log("Using temporary profile.");
 	}
 
-	const destChromePath = path.resolve(
-		process.cwd(),
-		".dist",
-		"userChrome.css",
-	);
-	const destContentPath = path.resolve(
-		process.cwd(),
-		".dist",
-		"userContent.css",
-	);
-
-	const srcChromePath = path.resolve(
+	const chromePath = path.resolve(
 		process.cwd(),
 		options.chromePath || "userChrome.css",
 	);
 
-	const srcContentPath = path.resolve(
+	const contentPath = path.resolve(
 		process.cwd(),
 		options.contentPath || "userContent.css",
 	);
 
 	const chromeTarget = {
-		filePaths: [srcChromePath],
+		filePaths: [chromePath],
 		onChange: async () => {
 			const importedFiles = await processAndInjectCss(
-				srcChromePath,
-				destChromePath,
+				chromePath,
 				ROOT_USER_CHROME_ID,
 				"chrome",
 			);
 			fileWatcher.updateFilePaths(chromeTarget, [
-				srcChromePath,
+				chromePath,
 				...(importedFiles || []),
 			]);
 		},
@@ -105,16 +111,15 @@ export async function startCommand(
 	fileWatcher.addTarget(chromeTarget);
 
 	const contentTarget = {
-		filePaths: [srcContentPath],
+		filePaths: [contentPath],
 		onChange: async () => {
 			const importedFiles = await processAndInjectCss(
-				srcContentPath,
-				destContentPath,
+				contentPath,
 				ROOT_USER_CONTENT_ID,
 				"content",
 			);
 			fileWatcher.updateFilePaths(contentTarget, [
-				srcContentPath,
+				contentPath,
 				...(importedFiles || []),
 			]);
 		},
@@ -132,18 +137,15 @@ export async function startCommand(
 	if (options.watch !== false) {
 		await fileWatcher.start();
 		console.log("Live watcher active. Press Ctrl+C to quit.\n");
+	} else {
+		console.log("Firefox running. Press Ctrl+C to quit.\n");
 	}
 
 	await chromeTarget.onChange();
 	await contentTarget.onChange();
 
-	const handleShutdown = async () => {
-		console.log("\nShutting down Firefox...");
-		await fileWatcher.close().catch(() => {});
-		await firefoxManager.terminateBrowser().catch(() => {});
-		process.exit(0);
-	};
-
 	process.on("SIGINT", handleShutdown);
 	process.on("SIGTERM", handleShutdown);
+
+	void firefoxManager.waitForWindowClose().then(handleShutdown);
 }

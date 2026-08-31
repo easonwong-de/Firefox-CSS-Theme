@@ -22,6 +22,10 @@ import { styleRegistry } from "./registry.js";
 export class FirefoxManager {
 	private driver: WebDriver | null = null;
 
+	/**
+	 * Launches and initialises a Firefox instance with marionette chrome
+	 * debugging capabilities enabled.
+	 */
 	public async initialiseBrowser(
 		binaryPath?: string,
 		profileName?: string,
@@ -83,12 +87,29 @@ export class FirefoxManager {
 		}
 	}
 
+	/** Terminates the active Firefox browser session and cleans up resources. */
 	public async terminateBrowser(): Promise<void> {
 		if (!this.driver) return;
-		await this.driver.quit();
+		const activeDriver = this.driver;
 		this.driver = null;
+		await activeDriver.quit().catch(() => {});
 	}
 
+	/** Awaits the closure of all Firefox browser windows. */
+	public async waitForWindowClose(): Promise<void> {
+		if (!this.driver) return;
+
+		try {
+			await this.driver.wait(async () => {
+				const windowHandles = await this.driver!.getAllWindowHandles();
+				return windowHandles.length === 0;
+			});
+		} catch {
+			return;
+		}
+	}
+
+	/** Ensures that the WebDriver context is set to the Firefox chrome scope. */
 	public async ensureChromeContext(): Promise<void> {
 		if (!this.driver) {
 			throw new Error("Firefox driver instance is not initialised.");
@@ -96,6 +117,10 @@ export class FirefoxManager {
 		await this.driver.setContext("chrome");
 	}
 
+	/**
+	 * Executes a synchronous or asynchronous JavaScript function or snippet in
+	 * the Firefox chrome context.
+	 */
 	public async executeChromeScript<T>(
 		script: string | ((...argumentsList: any[]) => T | Promise<T>),
 		...argumentsList: unknown[]
@@ -107,6 +132,7 @@ export class FirefoxManager {
 		)) as T;
 	}
 
+	/** Queries and extracts details for DOM elements matching a CSS selector. */
 	public async queryElements(selector: string): Promise<UiElementDetails[]> {
 		await this.ensureChromeContext();
 
@@ -136,6 +162,7 @@ export class FirefoxManager {
 		);
 	}
 
+	/** Retrieves computed CSS property declarations for a targeted UI element. */
 	public async getComputedStyles(
 		selector: string,
 		stylePropertyNames?: string[],
@@ -185,6 +212,10 @@ export class FirefoxManager {
 		);
 	}
 
+	/**
+	 * Traverses and returns the UI element node hierarchy up to a maximum
+	 * depth.
+	 */
 	public async getUiTree(
 		rootSelector: string = "window",
 		maxDepth: number = 3,
@@ -275,6 +306,7 @@ export class FirefoxManager {
 		);
 	}
 
+	/** Enters or exits Firefox toolbar customisation mode in the browser window. */
 	public async customiseToolbar(
 		action: ToolbarCustomisationAction = "enter",
 	): Promise<ToolbarCustomisationResult> {
@@ -337,12 +369,14 @@ export class FirefoxManager {
 		);
 	}
 
+	/** Alias for initialise or manage Firefox toolbar customisation mode. */
 	public async customizeToolbar(
 		action: ToolbarCustomisationAction = "enter",
 	): Promise<ToolbarCustomisationResult> {
 		return this.customiseToolbar(action);
 	}
 
+	/** Injects a userChrome stylesheet into the browser UI document tree. */
 	public async injectChromeStyle(
 		css: string,
 		id: string = "mcp-injected-style",
@@ -371,6 +405,10 @@ export class FirefoxManager {
 		return result;
 	}
 
+	/**
+	 * Registers and injects a userContent stylesheet via the Firefox Style
+	 * Sheet Service.
+	 */
 	public async injectContentStyle(
 		css: string,
 		id: string = "mcp-injected-content-style",
@@ -419,6 +457,7 @@ export class FirefoxManager {
 		return result;
 	}
 
+	/** Removes an injected userChrome stylesheet by its element identifier. */
 	public async removeChromeStyle(id: string): Promise<StyleRemovalResult> {
 		await this.ensureChromeContext();
 
@@ -438,6 +477,10 @@ export class FirefoxManager {
 		return result;
 	}
 
+	/**
+	 * Unregisters an injected userContent stylesheet from the Firefox Style
+	 * Sheet Service.
+	 */
 	public async removeContentStyle(id: string): Promise<StyleRemovalResult> {
 		await this.ensureChromeContext();
 
@@ -474,6 +517,7 @@ export class FirefoxManager {
 		return result;
 	}
 
+	/** Lists all active userChrome style elements injected in the DOM. */
 	public async listChromeStyles(): Promise<InjectedStyleDetails[]> {
 		await this.ensureChromeContext();
 
@@ -500,6 +544,7 @@ export class FirefoxManager {
 		});
 	}
 
+	/** Lists all active userContent style sheets registered in memory. */
 	public async listContentStyles(): Promise<InjectedStyleDetails[]> {
 		await this.ensureChromeContext();
 
@@ -538,6 +583,10 @@ export class FirefoxManager {
 		});
 	}
 
+	/**
+	 * Captures a base64-encoded PNG screenshot of the whole window or a target
+	 * element.
+	 */
 	public async getScreenshot(
 		targetSelector?: string,
 	): Promise<ScreenshotResult> {
@@ -556,6 +605,7 @@ export class FirefoxManager {
 		return { base64Image: fullWindowScreenshotBase64, format: "png" };
 	}
 
+	/** Launches the Firefox Browser Toolbox developer tools window. */
 	private async openBrowserToolbox(): Promise<BrowserToolboxResult> {
 		await this.ensureChromeContext();
 
