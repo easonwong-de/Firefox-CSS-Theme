@@ -1,6 +1,6 @@
 {
 	"name": "firefox-css-theme",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"description": "CLI toolkit and Model Context Protocol server for building, inspecting, and live-debugging Firefox UI and CSS themes.",
 	"homepage": "https://github.com/easonwong-de/Firefox-CSS-Theme#readme",
 	"bugs": {
