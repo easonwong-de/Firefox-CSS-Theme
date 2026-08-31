@@ -6,26 +6,33 @@ import type {
 	BrowserToolboxLauncherModule,
 	BrowserToolboxResult,
 	FirefoxCommandElement,
-	ScreenshotCaptureResult,
+	InjectedStyleDetails,
+	ScreenshotResult,
 	StyleInjectionResult,
 	StyleRemovalResult,
-	ToolbarCustomizationAction,
-	ToolbarCustomizationResult,
-	UserInterfaceElementDetails,
-	UserInterfaceNodeHierarchy,
+	StyleTarget,
+	ToolbarCustomisationAction,
+	ToolbarCustomisationResult,
+	UiElementDetails,
+	UiNodeHierarchy,
 } from "./types.js";
+import { resolveProfileDirectoryByName } from "./profiles.js";
+import { styleRegistry } from "./registry.js";
 
 export class FirefoxManager {
 	private driver: WebDriver | null = null;
 
 	public async initialiseBrowser(
 		binaryPath?: string,
-		profileDirectory?: string,
+		profileName?: string,
+		headless?: boolean,
+		novaUi?: boolean,
 	): Promise<void> {
 		if (this.driver) return;
 
-		const isNovaUiEnabled = process.argv.includes("--nova-ui");
-		const isHeadlessEnabled = process.argv.includes("--headless");
+		const isNovaUiEnabled = novaUi ?? process.argv.includes("--nova-ui");
+		const isHeadlessEnabled =
+			headless ?? process.argv.includes("--headless");
 
 		const options = new firefox.Options();
 		options.addArguments("-no-remote", "-new-instance");
@@ -47,7 +54,10 @@ export class FirefoxManager {
 		);
 
 		if (binaryPath) options.setBinary(binaryPath);
-		if (profileDirectory) options.setProfile(profileDirectory);
+		if (profileName) {
+			const profileDirectory = resolveProfileDirectoryByName(profileName);
+			options.setProfile(profileDirectory);
+		}
 
 		const service = new firefox.ServiceBuilder()
 			.enableVerboseLogging(true)
@@ -61,7 +71,9 @@ export class FirefoxManager {
 				.build();
 
 			await this.ensureChromeContext();
-			await this.openBrowserToolbox().catch(() => {});
+			if (!isHeadlessEnabled) {
+				await this.openBrowserToolbox().catch(() => {});
+			}
 		} catch (error) {
 			if (this.driver) {
 				await this.driver.quit().catch(() => {});
@@ -95,12 +107,10 @@ export class FirefoxManager {
 		)) as T;
 	}
 
-	public async queryElements(
-		selector: string,
-	): Promise<UserInterfaceElementDetails[]> {
+	public async queryElements(selector: string): Promise<UiElementDetails[]> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<UserInterfaceElementDetails[]>(
+		return await this.executeChromeScript<UiElementDetails[]>(
 			(querySelector: string) => {
 				const matchedElements = Array.from(
 					document.querySelectorAll(querySelector),
@@ -175,13 +185,13 @@ export class FirefoxManager {
 		);
 	}
 
-	public async getUserInterfaceTree(
+	public async getUiTree(
 		rootSelector: string = "window",
-		maximumDepth: number = 3,
-	): Promise<UserInterfaceNodeHierarchy> {
+		maxDepth: number = 3,
+	): Promise<UiNodeHierarchy> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<UserInterfaceNodeHierarchy>(
+		return await this.executeChromeScript<UiNodeHierarchy>(
 			(targetSelector: string, maximumTraversalDepth: number) => {
 				const rootTarget =
 					targetSelector === "window"
@@ -195,7 +205,7 @@ export class FirefoxManager {
 					);
 				}
 
-				const rootNodeHierarchy: UserInterfaceNodeHierarchy = {
+				const rootNodeHierarchy: UiNodeHierarchy = {
 					tagName: rootTarget.tagName.toLowerCase(),
 					id: rootTarget.id || "",
 					className: rootTarget.className || "",
@@ -210,7 +220,7 @@ export class FirefoxManager {
 
 				const nodeQueue: Array<{
 					domNode: Element;
-					hierarchyNode: UserInterfaceNodeHierarchy;
+					hierarchyNode: UiNodeHierarchy;
 					currentDepth: number;
 				}> = [
 					{
@@ -239,7 +249,7 @@ export class FirefoxManager {
 							childAttributes[attribute.name] = attribute.value;
 						}
 
-						const childHierarchyNode: UserInterfaceNodeHierarchy = {
+						const childHierarchyNode: UiNodeHierarchy = {
 							tagName: childElement.tagName.toLowerCase(),
 							id: childElement.id || "",
 							className: childElement.className || "",
@@ -261,17 +271,17 @@ export class FirefoxManager {
 				return rootNodeHierarchy;
 			},
 			rootSelector,
-			maximumDepth,
+			maxDepth,
 		);
 	}
 
-	public async customizeToolbar(
-		action: ToolbarCustomizationAction = "enter",
-	): Promise<ToolbarCustomizationResult> {
+	public async customiseToolbar(
+		action: ToolbarCustomisationAction = "enter",
+	): Promise<ToolbarCustomisationResult> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<ToolbarCustomizationResult>(
-			async (requestedAction: ToolbarCustomizationAction) => {
+		return await this.executeChromeScript<ToolbarCustomisationResult>(
+			async (requestedAction: ToolbarCustomisationAction) => {
 				const customizeMode = window.gCustomizeMode;
 				const documentElement = document.documentElement;
 
@@ -282,32 +292,32 @@ export class FirefoxManager {
 					if (customizeCommand) {
 						customizeCommand.doCommand();
 						return {
-							isCustomizing:
+							isCustomising:
 								documentElement.hasAttribute("customizing"),
 							success: true,
 						};
 					}
 					throw new Error(
-						"Customize toolbar mode is not available in the current context.",
+						"Customise toolbar mode is not available in the current context.",
 					);
 				}
 
-				const isCurrentlyCustomizing =
+				const isCurrentlyCustomising =
 					documentElement.hasAttribute("customizing") ||
 					Boolean(customizeMode.visible);
 				const shouldEnter = requestedAction === "enter";
 
-				if (shouldEnter !== isCurrentlyCustomizing) {
+				if (shouldEnter !== isCurrentlyCustomising) {
 					const transitionEventName = shouldEnter
 						? "customizationready"
 						: "aftercustomization";
 
 					await new Promise<void>((resolve) => {
-						const timeoutIdentifier = setTimeout(resolve, 5000);
+						const timeout = setTimeout(resolve, 5000);
 						window.addEventListener(
 							transitionEventName,
 							() => {
-								clearTimeout(timeoutIdentifier);
+								clearTimeout(timeout);
 								resolve();
 							},
 							{ once: true },
@@ -317,7 +327,7 @@ export class FirefoxManager {
 				}
 
 				return {
-					isCustomizing:
+					isCustomising:
 						documentElement.hasAttribute("customizing") ||
 						Boolean(customizeMode.visible),
 					success: true,
@@ -327,51 +337,210 @@ export class FirefoxManager {
 		);
 	}
 
-	public async injectUserInterfaceStyle(
-		cascadingStyleSheetContent: string,
-		styleIdentifier: string = "mcp-injected-style",
+	public async customizeToolbar(
+		action: ToolbarCustomisationAction = "enter",
+	): Promise<ToolbarCustomisationResult> {
+		return this.customiseToolbar(action);
+	}
+
+	public async injectChromeStyle(
+		css: string,
+		id: string = "mcp-injected-style",
+		srcPath?: string,
 	): Promise<StyleInjectionResult> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<StyleInjectionResult>(
-			(identifier: string, cssSource: string) => {
-				let existingStyleElement = document.getElementById(identifier);
+		const result = await this.executeChromeScript<StyleInjectionResult>(
+			(id: string, cssSource: string) => {
+				let existingStyleElement = document.getElementById(id);
 				if (!existingStyleElement) {
 					existingStyleElement = document.createElement("style");
-					existingStyleElement.id = identifier;
+					existingStyleElement.id = id;
 					existingStyleElement.setAttribute("type", "text/css");
 					document.documentElement.appendChild(existingStyleElement);
 				}
 
 				existingStyleElement.textContent = cssSource;
-				return { success: true, identifier: identifier };
+				return { id: id, success: true };
 			},
-			styleIdentifier,
-			cascadingStyleSheetContent,
+			id,
+			css,
 		);
+
+		styleRegistry.register(id, srcPath, "chrome");
+		return result;
 	}
 
-	public async removeUserInterfaceStyle(
-		styleIdentifier: string,
-	): Promise<StyleRemovalResult> {
+	public async injectContentStyle(
+		css: string,
+		id: string = "mcp-injected-content-style",
+		srcPath?: string,
+	): Promise<StyleInjectionResult> {
 		await this.ensureChromeContext();
 
-		return await this.executeChromeScript<StyleRemovalResult>(
-			(identifier: string) => {
-				const targetStyleElement = document.getElementById(identifier);
-				if (targetStyleElement) {
-					targetStyleElement.remove();
-					return { removed: true, identifier: identifier };
+		const result = await this.executeChromeScript<StyleInjectionResult>(
+			(id: string, cssSource: string) => {
+				const win = window as any;
+				win.__injectedContentSheets =
+					win.__injectedContentSheets || new Map<string, string>();
+				const prevUriStr = win.__injectedContentSheets.get(id);
+
+				const sss = (globalThis as any).Cc[
+					"@mozilla.org/content/style-sheet-service;1"
+				].getService((globalThis as any).Ci.nsIStyleSheetService);
+				const ioService = (globalThis as any).Cc[
+					"@mozilla.org/network/io-service;1"
+				].getService((globalThis as any).Ci.nsIIOService);
+
+				if (prevUriStr) {
+					try {
+						const prevUri = ioService.newURI(prevUriStr);
+						if (sss.sheetRegistered(prevUri, sss.USER_SHEET)) {
+							sss.unregisterSheet(prevUri, sss.USER_SHEET);
+						}
+					} catch {}
 				}
-				return { removed: false, identifier: identifier };
+
+				const newUriStr =
+					"data:text/css;charset=utf-8," +
+					encodeURIComponent(cssSource);
+				const newUri = ioService.newURI(newUriStr);
+				if (!sss.sheetRegistered(newUri, sss.USER_SHEET)) {
+					sss.loadAndRegisterSheet(newUri, sss.USER_SHEET);
+				}
+				win.__injectedContentSheets.set(id, newUriStr);
+				return { id: id, success: true };
 			},
-			styleIdentifier,
+			id,
+			css,
 		);
+
+		styleRegistry.register(id, srcPath, "content");
+		return result;
 	}
 
-	public async captureScreenshot(
+	public async removeChromeStyle(id: string): Promise<StyleRemovalResult> {
+		await this.ensureChromeContext();
+
+		const result = await this.executeChromeScript<StyleRemovalResult>(
+			(id: string) => {
+				const targetStyleElement = document.getElementById(id);
+				if (targetStyleElement) {
+					targetStyleElement.remove();
+					return { id: id, removed: true };
+				}
+				return { id: id, removed: false };
+			},
+			id,
+		);
+
+		styleRegistry.unregister(id);
+		return result;
+	}
+
+	public async removeContentStyle(id: string): Promise<StyleRemovalResult> {
+		await this.ensureChromeContext();
+
+		const result = await this.executeChromeScript<StyleRemovalResult>(
+			(id: string) => {
+				let removed = false;
+				const win = window as any;
+				if (win.__injectedContentSheets?.has(id)) {
+					const uriStr = win.__injectedContentSheets.get(id);
+					try {
+						const sss = (globalThis as any).Cc[
+							"@mozilla.org/content/style-sheet-service;1"
+						].getService(
+							(globalThis as any).Ci.nsIStyleSheetService,
+						);
+						const ioService = (globalThis as any).Cc[
+							"@mozilla.org/network/io-service;1"
+						].getService((globalThis as any).Ci.nsIIOService);
+						const uri = ioService.newURI(uriStr);
+						if (sss.sheetRegistered(uri, sss.USER_SHEET)) {
+							sss.unregisterSheet(uri, sss.USER_SHEET);
+						}
+						removed = true;
+					} catch {}
+					win.__injectedContentSheets.delete(id);
+				}
+
+				return { id: id, removed: removed };
+			},
+			id,
+		);
+
+		styleRegistry.unregister(id);
+		return result;
+	}
+
+	public async listChromeStyles(): Promise<InjectedStyleDetails[]> {
+		await this.ensureChromeContext();
+
+		const domStyles = await this.executeChromeScript<
+			Array<{ id: string; length: number }>
+		>(() => {
+			const styleElements = Array.from(
+				document.querySelectorAll("style[id]"),
+			);
+			return styleElements.map((element) => ({
+				id: element.id,
+				length: element.textContent ? element.textContent.length : 0,
+			}));
+		});
+
+		return domStyles.map((item) => {
+			const registration = styleRegistry.get(item.id);
+			return {
+				id: item.id,
+				length: item.length,
+				srcPath: registration?.srcPath,
+				target: "chrome" as StyleTarget,
+			};
+		});
+	}
+
+	public async listContentStyles(): Promise<InjectedStyleDetails[]> {
+		await this.ensureChromeContext();
+
+		const contentStyles = await this.executeChromeScript<
+			Array<{ id: string; length: number }>
+		>(() => {
+			const win = window as any;
+			const styles: Array<{ id: string; length: number }> = [];
+			if (win.__injectedContentSheets) {
+				for (const [
+					id,
+					uriStr,
+				] of win.__injectedContentSheets.entries()) {
+					styles.push({
+						id: id,
+						length: decodeURIComponent(
+							uriStr.replace(
+								/^data:text\/css;charset=utf-8,/,
+								"",
+							),
+						).length,
+					});
+				}
+			}
+			return styles;
+		});
+
+		return contentStyles.map((item) => {
+			const registration = styleRegistry.get(item.id);
+			return {
+				id: item.id,
+				length: item.length,
+				srcPath: registration?.srcPath,
+				target: "content" as StyleTarget,
+			};
+		});
+	}
+
+	public async getScreenshot(
 		targetSelector?: string,
-	): Promise<ScreenshotCaptureResult> {
+	): Promise<ScreenshotResult> {
 		await this.ensureChromeContext();
 
 		if (targetSelector) {

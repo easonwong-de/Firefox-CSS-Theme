@@ -3,7 +3,7 @@ import type { TestCase } from "../types.js";
 export const testCase: TestCase = {
 	name: "Get UI Tree",
 	async run({ firefoxManager, results }) {
-		const tree = await firefoxManager.getUserInterfaceTree("#nav-bar", 2);
+		const tree = await firefoxManager.getUiTree("#nav-bar", 2);
 
 		if (tree && typeof tree === "object") {
 			results.pass("Retrieved UI tree root");

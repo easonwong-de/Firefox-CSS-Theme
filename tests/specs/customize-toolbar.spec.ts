@@ -1,20 +1,20 @@
 import type { TestCase } from "../types.js";
 
 export const testCase: TestCase = {
-	name: "Customize Toolbar Mode",
+	name: "Customise Toolbar Mode",
 	async run({ firefoxManager, results }) {
-		const enterResult = await firefoxManager.customizeToolbar("enter");
-		if (enterResult.success && enterResult.isCustomizing) {
-			results.pass("Entered toolbar customization mode");
+		const enterResult = await firefoxManager.customiseToolbar("enter");
+		if (enterResult.success && enterResult.isCustomising) {
+			results.pass("Entered toolbar customisation mode");
 		} else {
-			results.fail("Failed to enter customization mode", enterResult);
+			results.fail("Failed to enter customisation mode", enterResult);
 		}
 
-		const exitResult = await firefoxManager.customizeToolbar("exit");
-		if (exitResult.success && !exitResult.isCustomizing) {
-			results.pass("Exited toolbar customization mode");
+		const exitResult = await firefoxManager.customiseToolbar("exit");
+		if (exitResult.success && !exitResult.isCustomising) {
+			results.pass("Exited toolbar customisation mode");
 		} else {
-			results.fail("Failed to exit customization mode", exitResult);
+			results.fail("Failed to exit customisation mode", exitResult);
 		}
 	},
 };

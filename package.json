@@ -1,7 +1,7 @@
 {
-	"name": "firefox-css-theme-mcp",
-	"version": "0.1.6",
-	"description": "Model Context Protocol server for inspecting and live-debugging Firefox UI DOM and CSS themes.",
+	"name": "firefox-css-theme",
+	"version": "0.2.0",
+	"description": "CLI toolkit and Model Context Protocol server for building, inspecting, and live-debugging Firefox UI and CSS themes.",
 	"homepage": "https://github.com/easonwong-de/Firefox-CSS-Theme-MCP#readme",
 	"bugs": {
 		"url": "https://github.com/easonwong-de/Firefox-CSS-Theme-MCP/issues"
@@ -15,7 +15,8 @@
 	"type": "module",
 	"main": "dist/index.js",
 	"bin": {
-		"firefox-css-theme-mcp": "dist/index.js"
+		"firefox-css-theme": "dist/cli.js",
+		"firefox-css-theme-mcp": "dist/cli.js"
 	},
 	"files": [
 		"dist"
@@ -24,18 +25,24 @@
 		"build": "tsc",
 		"format": "prettier --write --list-different .",
 		"prepublishOnly": "npm run build",
-		"start": "node dist/index.js",
+		"start": "node dist/cli.js start",
 		"test": "tsx tests/run.ts --headless"
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.30.0",
+		"chokidar": "^4.0.3",
+		"commander": "^15.0.0",
+		"postcss": "^8.5.3",
+		"postcss-import": "^16.1.0",
 		"selenium-webdriver": "^4.47.0",
 		"zod": "^4.4.3"
 	},
 	"devDependencies": {
 		"@types/node": "^26.2.0",
+		"@types/postcss-import": "^14.0.3",
 		"@types/selenium-webdriver": "^4.35.6",
 		"prettier": "^3.9.6",
+		"prettier-plugin-jsdoc": "^1.8.1",
 		"tsx": "^4.23.12",
 		"typescript": "^7.0.2"
 	}

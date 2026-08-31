@@ -3,7 +3,7 @@ import type { TestCase } from "../types.js";
 export const testCase: TestCase = {
 	name: "Take UI Screenshot",
 	async run({ firefoxManager, results }) {
-		const fullScreenshot = await firefoxManager.captureScreenshot();
+		const fullScreenshot = await firefoxManager.getScreenshot();
 		if (
 			fullScreenshot.format === "png" &&
 			typeof fullScreenshot.base64Image === "string" &&
@@ -18,7 +18,7 @@ export const testCase: TestCase = {
 		}
 
 		const elementScreenshot =
-			await firefoxManager.captureScreenshot("#nav-bar");
+			await firefoxManager.getScreenshot("#nav-bar");
 		if (
 			elementScreenshot.format === "png" &&
 			typeof elementScreenshot.base64Image === "string" &&

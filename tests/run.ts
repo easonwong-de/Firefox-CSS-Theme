@@ -2,7 +2,7 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { FirefoxManager } from "../src/firefox.js";
+import { firefoxManager } from "../src/firefox.js";
 import type { TestContext } from "./types.js";
 import { TestResults, getTestCases } from "./utils.js";
 
@@ -11,7 +11,6 @@ const SPEC_DIR = path.join(__dirname, "specs");
 
 async function main(): Promise<void> {
 	const results = new TestResults();
-	const firefoxManager = new FirefoxManager();
 
 	try {
 		const testCases = await getTestCases(SPEC_DIR);

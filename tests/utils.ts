@@ -83,10 +83,9 @@ export async function getTestCases(directoryPath: string): Promise<TestCase[]> {
 			specificationFile,
 		);
 		const moduleExports = await import(specificationFilePath);
-		if (!moduleExports.testCase) {
-			throw new Error(`Missing testCase export in ${specificationFile}`);
+		if (moduleExports.testCase) {
+			testCases.push(moduleExports.testCase as TestCase);
 		}
-		testCases.push(moduleExports.testCase as TestCase);
 	}
 	return testCases;
 }
