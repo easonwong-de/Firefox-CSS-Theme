@@ -7,7 +7,7 @@ on:
     workflow_dispatch:
 
 jobs:
-    publish:
+    publish-npm:
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -37,3 +37,26 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             - name: Publish to npm
               run: npm publish --provenance --access public
+
+    publish-mcp:
+        needs: publish-npm
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            id-token: write
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+            - name: Install mcp-publisher
+              run: |
+                  OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+                  ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+                  URL="https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_${OS}_${ARCH}.tar.gz"
+                  curl -fsSL "$URL" | tar -xz mcp-publisher
+                  chmod +x mcp-publisher
+            - name: Authenticate via OIDC
+              run: ./mcp-publisher login github-oidc
+            - name: Validate server configuration
+              run: ./mcp-publisher validate server.json
+            - name: Publish to MCP Registry
+              run: ./mcp-publisher publish

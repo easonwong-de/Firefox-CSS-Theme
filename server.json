@@ -1,0 +1,19 @@
+{
+	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+	"name": "io.github.easonwong-de/firefox-css-theme",
+	"description": "MCP for building, inspecting, and live-debugging Firefox UI and CSS themes.",
+	"repository": {
+		"url": "https://github.com/easonwong-de/Firefox-CSS-Theme",
+		"source": "github"
+	},
+	"version": "0.2.5",
+	"packages": [
+		{
+			"registryType": "npm",
+			"identifier": "firefox-css-theme",
+			"version": "0.2.5",
+			"transport": { "type": "stdio" },
+			"packageArguments": [{ "type": "positional", "value": "mcp" }]
+		}
+	]
+}
