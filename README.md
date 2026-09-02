@@ -3,7 +3,9 @@
 [![npm version](https://img.shields.io/npm/v/firefox-css-theme)](https://www.npmjs.com/package/firefox-css-theme)
 [![Test](https://github.com/easonwong-de/Firefox-CSS-Theme/actions/workflows/test.yml/badge.svg)](https://github.com/easonwong-de/Firefox-CSS-Theme/actions/workflows/test.yml)
 
-A CLI toolkit for scaffolding, compiling, live-debugging, and installing Firefox UI and CSS themes (`userChrome.css` and `userContent.css`). It also provides a Model Context Protocol (MCP) server for AI-assisted inspection and styling.
+A toolkit for Firefox CSS theme authors to scaffold, bundle, and live-debug `userChrome.css` and `userContent.css`. Adding it as a dev dependency effectively equips your theme with an automated installer for end users.
+
+It also provides an integrated Model Context Protocol (MCP) server for AI-assisted DOM inspection and live styling.
 
 ## Requirements
 
@@ -12,33 +14,47 @@ A CLI toolkit for scaffolding, compiling, live-debugging, and installing Firefox
 
 ## Getting Started
 
-### Installation
+### For Theme Authors
 
-Install as a development dependency within your theme repository:
+Install as a development dependency:
 
 ```bash
 npm install --save-dev firefox-css-theme
 ```
 
-Once installed, run it directly with `npx firefox-css-theme [command] [option]` or use `firefox-css-theme` in your npm scripts:
+Add helper scripts to your `package.json`:
 
-```json
+```javascript
 {
 	"scripts": {
-		"create": "firefox-css-theme create", // scaffold starter userChrome.css and userContent.css files
-		"start": "firefox-css-theme start", // launch Firefox with live stylesheet bundling and hot-reloading
+		"create": "firefox-css-theme create", // scaffold starter CSS templates
+		"start": "firefox-css-theme start", // launch Firefox with live CSS hot-reloading
 		"profiles": "firefox-css-theme profiles", // list all detected Firefox profiles
-		"install:theme": "firefox-css-theme install" // install compiled stylesheets into a Firefox profile's chrome folder
+		"install:theme": "firefox-css-theme install" // installer script for users
 	}
 }
 ```
 
 > [!NOTE]
-> `userChrome.css` and `userContent.css` must be located at the project root directory by default; otherwise, specify their paths using the `-c, --chrome` and `-u, --content` options.
+> `userChrome.css` and/or `userContent.css` must be located at the project root directory by default; otherwise, specify their paths using the `-c, --chrome` and `-u, --content` options.
+
+### For End Users
+
+When users clone your theme repository, they only need to run the installer:
+
+```bash
+# Clone the repository and install dependencies
+npm install
+
+# Installer the CSS theme
+npm run install:theme
+```
+
+If multiple Firefox profiles exist, the target profile needs to be specified with `-p, --profile <name>` (run `firefox-css-theme profiles` to list them).
 
 For the full list of CLI options, run `npx firefox-css-theme --help` in your project.
 
-## Command Line Interface
+## Commands
 
 ### `firefox-css-theme create`
 
@@ -60,7 +76,7 @@ firefox-css-theme create [options]
 
 ### `firefox-css-theme start`
 
-Launch Firefox with live stylesheet bundling and hot-reloading.
+Launch Firefox with live stylesheet bundling (`@import` inlining) and hot-reloading. Uses a temporary profile by default to keep your personal profile safe.
 
 #### Usage
 
@@ -92,7 +108,7 @@ firefox-css-theme profiles
 
 ### `firefox-css-theme install`
 
-Compile and install stylesheets directly into a Firefox profile's `chrome/` directory.
+The automated installer for end users. Compiles stylesheets, enables custom stylesheet preferences in `user.js`, and deploys files directly into the target Firefox profile's `chrome/` directory.
 
 #### Usage
 
@@ -111,7 +127,7 @@ firefox-css-theme install [options]
 | `-f, --force`          | Overwrite existing theme files in the profile without confirmation prompt |
 
 > [!WARNING]
-> This operation will overwrite existing CSS themes in the profile. A backup is advised.
+> This operation will overwrite existing CSS themes in the profile unless `--merge` is specified. A backup is advised.
 
 ### `firefox-css-theme mcp`
 
@@ -188,14 +204,14 @@ Or using a local build:
 
 ## Available MCP Tools
 
-- `launch_browser`: Launches Firefox with chrome debugging capabilities enabled.
+- `launch_browser`: Launches Firefox with chrome debugging.
 - `close_browser`: Terminates the browser instance.
-- `customize_toolbar`: Activates or controls the Firefox "Customise Toolbar" mode.
-- `get_ui_tree`: Dumps the hierarchical DOM tree of the chrome window.
+- `customize_toolbar`: Toggles the Firefox "Customise Toolbar" mode.
+- `get_ui_tree`: Dumps the hierarchical DOM tree of selected UI element.
 - `query_ui_elements`: Queries elements matching a CSS selector in the browser chrome.
 - `get_computed_styles`: Extracts computed CSS property values of a specific UI element.
-- `inject_theme_css`: Injects stylesheets in the live UI (`target: "chrome" | "content"`).
-- `remove_theme_css`: Removes an injected stylesheet by id (`target: "chrome" | "content"`).
-- `list_theme_css`: Lists all currently injected custom stylesheets (`target: "chrome" | "content"`).
-- `take_ui_screenshot`: Captures a screenshot of the browser window or a specific UI component.
-- `execute_chrome_javascript`: Runs privileged JavaScript in the browser chrome window context.
+- `inject_theme_css`: Injects a stylesheet in the live UI.
+- `remove_theme_css`: Removes an injected stylesheet.
+- `list_theme_css`: Lists all currently injected stylesheets.
+- `take_ui_screenshot`: Captures a screenshot of a specific UI component.
+- `execute_chrome_javascript`: Runs JavaScript in the browser chrome window context.
