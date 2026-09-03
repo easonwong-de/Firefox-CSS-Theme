@@ -2,11 +2,11 @@
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { log } from "@clack/prompts";
 import { Command } from "commander";
 import { createCommand } from "./commands/create.js";
-import { startMcpServer } from "./commands/mcp.js";
-import { profilesCommand } from "./commands/profiles.js";
 import { installCommand } from "./commands/install.js";
+import { startMcpServer } from "./commands/mcp.js";
 import { startCommand } from "./commands/start.js";
 
 const packageJson = JSON.parse(
@@ -54,38 +54,31 @@ program
 		"-u, --content <path>",
 		"Path to userContent.css (default: ./userContent.css)",
 	)
-	.option("--no-watch", "Disable file watching in start mode")
+	.option("--binary <path>", "Path to custom Firefox executable")
 	.option("--headless", "Run Firefox in headless mode")
 	.option("--nova-ui", "Enable Firefox Nova UI preferences")
-	.option("--binary <path>", "Path to custom Firefox executable")
+	.option("--no-watch", "Disable file watching in start mode")
 	.action(
 		async (options: {
-			binary?: string;
+			profile?: string;
 			chrome?: string;
 			content?: string;
+			binary?: string;
 			headless?: boolean;
 			novaUi?: boolean;
-			profile?: string;
 			watch: boolean;
 		}) => {
 			await startCommand({
-				binaryPath: options.binary,
+				profileName: options.profile,
 				chromePath: options.chrome,
 				contentPath: options.content,
+				binaryPath: options.binary,
 				headless: options.headless,
 				novaUi: options.novaUi,
-				profileName: options.profile,
 				watch: options.watch,
 			});
 		},
 	);
-
-program
-	.command("profiles")
-	.description("List all detected Firefox profiles")
-	.action(async () => {
-		await profilesCommand();
-	});
 
 program
 	.command("install")
@@ -99,17 +92,17 @@ program
 	.option("-f, --force", "Overwrite existing files without confirmation")
 	.action(
 		async (options: {
+			profile?: string;
 			chrome?: string;
 			content?: string;
 			merge?: boolean;
-			profile?: string;
 			force?: boolean;
 		}) => {
 			await installCommand({
+				profileName: options.profile,
 				chromePath: options.chrome,
 				contentPath: options.content,
 				merge: options.merge,
-				profileName: options.profile,
 				force: options.force,
 			});
 		},
@@ -118,23 +111,23 @@ program
 program
 	.command("mcp")
 	.description("Start the Model Context Protocol (MCP) server")
-	.option("--nova-ui", "Enable Firefox Nova UI preferences")
-	.option("--headless", "Run Firefox in headless mode")
-	.option("--binary <path>", "Path to custom Firefox executable")
 	.option("-p, --profile <name>", "Designate Firefox profile name")
+	.option("--binary <path>", "Path to custom Firefox executable")
+	.option("--headless", "Run Firefox in headless mode")
+	.option("--nova-ui", "Enable Firefox Nova UI preferences")
 	.allowUnknownOption()
 	.action(
 		async (options: {
+			profile?: string;
 			binary?: string;
 			headless?: boolean;
 			novaUi?: boolean;
-			profile?: string;
 		}) => {
 			await startMcpServer({
+				profileName: options.profile,
 				binaryPath: options.binary,
 				headless: options.headless,
 				novaUi: options.novaUi,
-				profileName: options.profile,
 			});
 		},
 	);
@@ -147,8 +140,8 @@ async function main(): Promise<void> {
 		scriptBinaryName === "firefox-css-theme-mcp" ||
 		scriptBinaryName === "firefox-css-theme-mcp.js"
 	) {
-		const isNovaUi = process.argv.includes("--nova-ui");
 		const isHeadless = process.argv.includes("--headless");
+		const isNovaUi = process.argv.includes("--nova-ui");
 		await startMcpServer({ headless: isHeadless, novaUi: isNovaUi });
 		return;
 	}
@@ -157,6 +150,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-	console.error(error instanceof Error ? error.message : error);
+	log.error(error instanceof Error ? error.message : String(error));
 	process.exit(1);
 });

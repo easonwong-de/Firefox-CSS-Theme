@@ -8,13 +8,14 @@ export {
 	styleRegistry,
 } from "./registry.js";
 export {
-	getFirefoxConfigurationDirectory,
-	listProfiles as listFirefoxProfiles,
-	resolveProfileDirectoryByName,
+	getConfigDir,
+	listProfiles,
+	getProfileDir,
+	selectProfile,
+	type SelectProfileOptions,
 } from "./profiles.js";
 export { FileWatcher, fileWatcher } from "./watcher.js";
 export { createCommand } from "./commands/create.js";
 export { startCommand } from "./commands/start.js";
 export { installCommand } from "./commands/install.js";
-export { profilesCommand } from "./commands/profiles.js";
 export { startMcpServer } from "./commands/mcp.js";

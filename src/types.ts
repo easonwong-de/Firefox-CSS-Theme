@@ -16,13 +16,11 @@ export interface UiNodeHierarchy {
 }
 
 export type ToolbarCustomisationAction = "enter" | "exit";
-export type ToolbarCustomizationAction = ToolbarCustomisationAction;
 
 export interface ToolbarCustomisationResult {
 	isCustomising: boolean;
 	success: boolean;
 }
-export type ToolbarCustomizationResult = ToolbarCustomisationResult;
 
 export interface StyleInjectionResult {
 	id: string;
@@ -43,7 +41,7 @@ export interface BrowserToolboxResult {
 	success: boolean;
 }
 
-export interface FirefoxCustomizeMode {
+export interface FirefoxCustomiseMode {
 	enter(): void;
 	exit(): void;
 	visible?: boolean;
@@ -57,7 +55,7 @@ export interface BrowserToolboxLauncherModule {
 	BrowserToolboxLauncher: { init(): void };
 }
 
-export interface FirefoxProfileInfo {
+export interface ProfileInfo {
 	isDefault: boolean;
 	isRelative: boolean;
 	name: string;
@@ -85,33 +83,33 @@ export interface CreateCommandOptions {
 }
 
 export interface StartCommandOptions {
-	binaryPath?: string;
+	profileName?: string;
 	chromePath?: string;
 	contentPath?: string;
+	binaryPath?: string;
 	headless?: boolean;
 	novaUi?: boolean;
-	profileName?: string;
 	watch?: boolean;
 }
 
 export interface InstallCommandOptions {
+	profileName?: string;
 	chromePath?: string;
 	contentPath?: string;
 	merge?: boolean;
-	profileName?: string;
 	force?: boolean;
 }
 
 export interface McpCommandOptions {
+	profileName?: string;
 	binaryPath?: string;
 	headless?: boolean;
 	novaUi?: boolean;
-	profileName?: string;
 }
 
 declare global {
 	interface Window {
-		gCustomizeMode?: FirefoxCustomizeMode;
+		gCustomizeMode?: FirefoxCustomiseMode;
 	}
 
 	const ChromeUtils: {

@@ -1,5 +1,6 @@
 import { existsSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { log } from "@clack/prompts";
 import type { CreateCommandOptions } from "../types.js";
 
 const DEFAULT_CHROME_CSS = `/* Firefox userChrome.css */
@@ -25,13 +26,11 @@ function createStylesheetFile(
 ): void {
 	const resolvedPath = path.resolve(process.cwd(), filePath);
 	if (existsSync(resolvedPath) && !force) {
-		console.warn(
-			`\x1b[33m[skip]\x1b[0m ${resolvedPath} already exists. Use --force to overwrite.`,
-		);
+		log.warn(`${resolvedPath} already exists. Use --force to overwrite.`);
 		return;
 	}
 	writeFileSync(resolvedPath, defaultContent, "utf8");
-	console.log(`\x1b[32m[created]\x1b[0m ${resolvedPath}`);
+	log.success(`Created ${resolvedPath}`);
 }
 
 /**

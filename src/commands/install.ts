@@ -7,9 +7,9 @@ import {
 	writeFileSync,
 } from "node:fs";
 import path from "node:path";
-import readline from "node:readline/promises";
+import { cancel, confirm, isCancel, log } from "@clack/prompts";
 import { compileCssString } from "../processor.js";
-import { listProfiles, resolveProfileDirectoryByName } from "../profiles.js";
+import { getProfileDir, listProfiles, selectProfile } from "../profiles.js";
 import type { InstallCommandOptions } from "../types.js";
 
 /**
@@ -61,9 +61,7 @@ async function installStylesheet(
 
 	const compiledBundle = await compileCssString(mergedCss, srcPath);
 	writeFileSync(destPath, compiledBundle.css, "utf8");
-	console.log(
-		`\x1b[32m[installed]\x1b[0m ${path.basename(destPath)} -> ${destPath}`,
-	);
+	log.success(`Installed ${path.basename(destPath)} -> ${destPath}`);
 }
 
 /**
@@ -77,21 +75,15 @@ export async function installCommand(
 
 	if (!profileName) {
 		const profiles = listProfiles();
-		if (profiles.length === 0) {
+		if (profiles.length === 0)
 			throw new Error("No Firefox profile detected.");
-		} else if (profiles.length === 1) {
-			profileName = profiles[0].name;
-		} else {
-			const profileNames = profiles
-				.map((profile) => profile.name)
-				.join(", ");
-			throw new Error(
-				`Multiple Firefox profiles detected (${profileNames}). Specify target profile with -p, --profile <name>.`,
-			);
-		}
+		profileName =
+			profiles.length === 1
+				? profiles[0].name
+				: await selectProfile(profiles);
 	}
 
-	const profileDir = resolveProfileDirectoryByName(profileName);
+	const profileDir = getProfileDir(profileName);
 	const chromeDir = path.join(profileDir, "chrome");
 
 	const srcChromePath = options.chromePath
@@ -105,7 +97,7 @@ export async function installCommand(
 			? path.resolve(process.cwd(), "userContent.css")
 			: undefined;
 	if (!srcChromePath && !srcContentPath) {
-		console.warn("No stylesheet files found to install.");
+		log.warn("No stylesheet files found to install.");
 		return;
 	}
 
@@ -131,17 +123,14 @@ export async function installCommand(
 			: readdirSync(chromeDir).length > 0);
 
 	if (requiresConfirmation) {
-		const readlineInterface = readline.createInterface({
-			input: process.stdin,
-			output: process.stdout,
+		const shouldProceed = await confirm({
+			message: `Existing theme files will be ${
+				options.merge ? "merged" : "overwritten"
+			} in profile "${profileName}". Proceed?`,
+			initialValue: false,
 		});
-		const warningAction = options.merge ? "merged" : "overwritten";
-		const userResponse = await readlineInterface.question(
-			`\x1b[33m[warning]\x1b[0m Existing theme files will be ${warningAction} in profile "${profileName}". Proceed? (y/N) `,
-		);
-		readlineInterface.close();
-		if (userResponse.trim().toLowerCase() !== "y") {
-			console.log("Install operation cancelled.");
+		if (isCancel(shouldProceed) || !shouldProceed) {
+			cancel("Install operation cancelled.");
 			return;
 		}
 	}

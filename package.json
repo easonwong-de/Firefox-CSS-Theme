@@ -30,16 +30,18 @@
 		"test": "tsx tests/run.ts --headless"
 	},
 	"dependencies": {
+		"@clack/prompts": "^1.7.0",
 		"@modelcontextprotocol/sdk": "^1.30.0",
 		"chokidar": "^5.0.0",
 		"commander": "^15.0.0",
-		"postcss": "^8.5.26",
+		"postcss": "^8.5.28",
 		"postcss-import": "^17.0.0",
 		"selenium-webdriver": "^4.48.0",
 		"zod": "^4.5.4"
 	},
 	"devDependencies": {
-		"@types/node": "^26.4.0",
+		"@trivago/prettier-plugin-sort-imports": "^6.0.2",
+		"@types/node": "^26.4.1",
 		"@types/postcss-import": "^14.0.3",
 		"@types/selenium-webdriver": "^4.35.6",
 		"prettier": "^3.9.6",

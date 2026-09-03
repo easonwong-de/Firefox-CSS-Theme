@@ -1,7 +1,9 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { log } from "@clack/prompts";
 import { firefoxManager } from "../firefox.js";
 import { compileCssFile } from "../processor.js";
+import { listProfiles, selectProfile } from "../profiles.js";
 import { ROOT_USER_CHROME_ID, ROOT_USER_CONTENT_ID } from "../registry.js";
 import type { StartCommandOptions, StyleTarget } from "../types.js";
 import { type WatchedTarget, fileWatcher } from "../watcher.js";
@@ -17,7 +19,7 @@ async function handleShutdown(): Promise<void> {
 	isShuttingDown = true;
 	process.off("SIGINT", handleShutdown);
 	process.off("SIGTERM", handleShutdown);
-	console.log("\nShutting down Firefox...");
+	log.step("Shutting down Firefox...");
 	await fileWatcher.close().catch(() => {});
 	await firefoxManager.terminateBrowser().catch(() => {});
 	process.exit(0);
@@ -58,12 +60,11 @@ async function processAndInjectCss(
 			);
 		}
 
-		console.log(`\x1b[32m[reloaded]\x1b[0m ${id} (${srcPath})`);
+		log.success(`Reloaded ${id} (${srcPath})`);
 		return compilationResult.importedFiles;
 	} catch (error) {
-		console.error(
-			`\x1b[31m[build error]\x1b[0m ${srcPath}:`,
-			error instanceof Error ? error.message : error,
+		log.error(
+			`Build error in ${srcPath}: ${error instanceof Error ? error.message : error}`,
 		);
 		return undefined;
 	}
@@ -100,10 +101,23 @@ function createWatchTarget(
 export async function startCommand(
 	options: StartCommandOptions = {},
 ): Promise<void> {
-	if (options.profileName) {
-		console.log(`Using profile: \x1b[1m${options.profileName}\x1b[0m`);
+	let profileName = options.profileName;
+
+	if (!profileName) {
+		const profiles = listProfiles();
+		if (profiles.length > 0) {
+			const selected = await selectProfile(profiles, {
+				includeTemporary: true,
+			});
+			if (selected !== "temporary") profileName = selected;
+		}
+	}
+	if (profileName === "temporary") profileName = undefined;
+
+	if (profileName) {
+		log.info(`Using profile: ${profileName}`);
 	} else {
-		console.log("Using temporary profile.");
+		log.info("Using temporary profile.");
 	}
 
 	const chromePath = path.resolve(
@@ -126,19 +140,19 @@ export async function startCommand(
 		"content",
 	);
 
-	console.log("Launching Firefox instance...");
+	log.step("Launching Firefox instance...");
 	await firefoxManager.initialiseBrowser(
 		options.binaryPath,
-		options.profileName,
+		profileName,
 		options.headless,
 		options.novaUi,
 	);
 
 	if (options.watch !== false) {
 		await fileWatcher.start();
-		console.log("Live watcher active. Press Ctrl+C to quit.\n");
+		log.info("Live watcher active. Press Ctrl+C to quit.\n");
 	} else {
-		console.log("Firefox running. Press Ctrl+C to quit.\n");
+		log.info("Firefox running. Press Ctrl+C to quit.\n");
 	}
 
 	await chromeTarget.onChange();

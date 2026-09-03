@@ -1,7 +1,4 @@
-import {
-	listProfiles,
-	resolveProfileDirectoryByName,
-} from "../../src/profiles.js";
+import { getProfileDir, listProfiles } from "../../src/profiles.js";
 import type { TestCase } from "../types.js";
 
 export const testCase: TestCase = {
@@ -16,9 +13,7 @@ export const testCase: TestCase = {
 
 		if (profiles.length > 0) {
 			const firstProfile = profiles[0];
-			const resolvedPath = resolveProfileDirectoryByName(
-				firstProfile.name,
-			);
+			const resolvedPath = getProfileDir(firstProfile.name);
 			if (resolvedPath === firstProfile.path) {
 				results.pass("Resolved profile path matches detected path");
 			} else {

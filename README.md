@@ -3,9 +3,9 @@
 [![npm version](https://img.shields.io/npm/v/firefox-css-theme)](https://www.npmjs.com/package/firefox-css-theme)
 [![Test](https://github.com/easonwong-de/Firefox-CSS-Theme/actions/workflows/test.yml/badge.svg)](https://github.com/easonwong-de/Firefox-CSS-Theme/actions/workflows/test.yml)
 
-A toolkit for Firefox CSS theme authors to scaffold, bundle, and live-debug `userChrome.css` and `userContent.css`. Adding it as a dev dependency effectively equips your theme with an automated installer for end users.
+A toolkit for Firefox CSS theme authors to scaffold, bundle, and live-debug theme repositories. It also provides end users with an automated installer.
 
-It also provides an integrated Model Context Protocol (MCP) server for AI-assisted DOM inspection and live styling.
+A Model Context Protocol (MCP) server is also available for AI-assisted DOM inspection and live styling.
 
 ## Requirements
 
@@ -29,7 +29,6 @@ Add helper scripts to your `package.json`:
 	"scripts": {
 		"create": "firefox-css-theme create", // scaffold starter CSS templates
 		"start": "firefox-css-theme start", // launch Firefox with live CSS hot-reloading
-		"profiles": "firefox-css-theme profiles", // list all detected Firefox profiles
 		"install:theme": "firefox-css-theme install" // installer script for users
 	}
 }
@@ -50,7 +49,7 @@ npm install
 npm run install:theme
 ```
 
-If multiple Firefox profiles exist, the target profile needs to be specified with `-p, --profile <name>` (run `firefox-css-theme profiles` to list them).
+If multiple Firefox profiles exist, an interactive selection list will prompt you to choose one. To skip the selction, specify the target profile directly with `-p, --profile <name>`.
 
 For the full list of CLI options, run `npx firefox-css-theme --help` in your project.
 
@@ -76,7 +75,7 @@ firefox-css-theme create [options]
 
 ### `firefox-css-theme start`
 
-Launch Firefox with live stylesheet bundling (`@import` inlining) and hot-reloading. Uses a temporary profile by default to keep your personal profile safe.
+Launch Firefox with live stylesheet bundling (`@import` inlining) and hot-reloading.
 
 #### Usage
 
@@ -86,25 +85,15 @@ firefox-css-theme start [options]
 
 #### Options
 
-| Option                 | Description                                                                  |
-| ---------------------- | ---------------------------------------------------------------------------- |
-| `-p, --profile <name>` | Designate an existing Firefox profile by name (temporary profile if omitted) |
-| `-c, --chrome <path>`  | Custom path to `userChrome.css` (default: `./userChrome.css`)                |
-| `-u, --content <path>` | Custom path to `userContent.css` (default: `./userContent.css`)              |
-| `--no-watch`           | Disable file watching and live reloading                                     |
-| `--headless`           | Run Firefox in headless mode                                                 |
-| `--nova-ui`            | Enable Firefox Nova UI redesign preferences                                  |
-| `--binary <path>`      | Path to custom Firefox executable binary                                     |
-
-### `firefox-css-theme profiles`
-
-List all detected Firefox profiles and their directory paths.
-
-#### Usage
-
-```bash
-firefox-css-theme profiles
-```
+| Option                 | Description                                                     |
+| ---------------------- | --------------------------------------------------------------- |
+| `-p, --profile <name>` | Designate an existing Firefox profile by name                   |
+| `-c, --chrome <path>`  | Custom path to `userChrome.css` (default: `./userChrome.css`)   |
+| `-u, --content <path>` | Custom path to `userContent.css` (default: `./userContent.css`) |
+| `--binary <path>`      | Path to custom Firefox executable binary                        |
+| `--headless`           | Run Firefox in headless mode                                    |
+| `--nova-ui`            | Enable Firefox Nova UI redesign preferences                     |
+| `--no-watch`           | Disable file watching and live reloading                        |
 
 ### `firefox-css-theme install`
 
@@ -120,7 +109,7 @@ firefox-css-theme install [options]
 
 | Option                 | Description                                                               |
 | ---------------------- | ------------------------------------------------------------------------- |
-| `-p, --profile <name>` | Target Firefox profile name (mandatory if multiple profiles exist)        |
+| `-p, --profile <name>` | Target Firefox profile name                                               |
 | `-c, --chrome <path>`  | Custom path to `userChrome.css` (default: `./userChrome.css`)             |
 | `-u, --content <path>` | Custom path to `userContent.css` (default: `./userContent.css`)           |
 | `-m, --merge`          | Merge with existing theme stylesheets instead of overwriting              |
@@ -144,9 +133,9 @@ firefox-css-theme mcp [options]
 | Option                 | Description                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------------- |
 | `-p, --profile <name>` | Designate an existing Firefox profile by name (isolated temporary profile if omitted) |
-| `--nova-ui`            | Enable Firefox Nova UI redesign preferences                                           |
-| `--headless`           | Run Firefox in headless mode                                                          |
 | `--binary <path>`      | Path to custom Firefox executable binary                                              |
+| `--headless`           | Run Firefox in headless mode                                                          |
+| `--nova-ui`            | Enable Firefox Nova UI redesign preferences                                           |
 
 ## MCP Server Usage
 

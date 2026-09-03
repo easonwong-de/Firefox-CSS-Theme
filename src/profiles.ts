@@ -1,13 +1,14 @@
 import { existsSync, readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import type { FirefoxProfileInfo } from "./types.js";
+import { cancel, isCancel, select } from "@clack/prompts";
+import type { ProfileInfo } from "./types.js";
 
 /**
  * Discovers the platform-specific directory where Firefox configuration and
  * profiles are located.
  */
-export function getFirefoxConfigurationDirectory(): string {
+export function getConfigDir(): string {
 	if (process.platform === "darwin") {
 		return path.join(
 			os.homedir(),
@@ -29,21 +30,18 @@ export function getFirefoxConfigurationDirectory(): string {
  * Parses the Firefox profiles.ini configuration file to extract profile
  * records.
  */
-export function listProfiles(
-	customConfigurationDirectory?: string,
-): FirefoxProfileInfo[] {
-	const configurationDirectory =
-		customConfigurationDirectory || getFirefoxConfigurationDirectory();
-	const profilesIniPath = path.join(configurationDirectory, "profiles.ini");
+export function listProfiles(customConfigDir?: string): ProfileInfo[] {
+	const configDir = customConfigDir || getConfigDir();
+	const profilesIniPath = path.join(configDir, "profiles.ini");
 
 	if (!existsSync(profilesIniPath)) return [];
 
 	const fileContent = readFileSync(profilesIniPath, "utf8");
 	const iniLines = fileContent.split(/\r?\n/);
-	const profileRecords: FirefoxProfileInfo[] = [];
+	const profileRecords: ProfileInfo[] = [];
 
 	let currentSection: string | null = null;
-	let currentProfileData: Partial<FirefoxProfileInfo> = {};
+	let currentProfileData: Partial<ProfileInfo> = {};
 
 	const pushProfileRecord = (): void => {
 		if (
@@ -55,10 +53,7 @@ export function listProfiles(
 			profileRecords.push({
 				name: currentProfileData.name,
 				path: isRelative
-					? path.resolve(
-							configurationDirectory,
-							currentProfileData.path,
-						)
+					? path.resolve(configDir, currentProfileData.path)
 					: currentProfileData.path,
 				isRelative: isRelative,
 				isDefault: Boolean(currentProfileData.isDefault),
@@ -92,7 +87,7 @@ export function listProfiles(
 }
 
 /** Resolves a registered Firefox profile name to its filesystem directory path. */
-export function resolveProfileDirectoryByName(profileName: string): string {
+export function getProfileDir(profileName: string): string {
 	const profiles = listProfiles();
 	const matchedProfile = profiles.find(
 		(profile) => profile.name === profileName,
@@ -106,4 +101,63 @@ export function resolveProfileDirectoryByName(profileName: string): string {
 		);
 	}
 	return matchedProfile.path;
+}
+
+export interface SelectProfileOptions {
+	includeTemporary?: boolean;
+}
+
+/**
+ * Prompts the user to select a Firefox profile from a list using terminal arrow
+ * keys and enter to confirm.
+ */
+export async function selectProfile(
+	profiles: ProfileInfo[],
+	options: SelectProfileOptions = {},
+): Promise<string> {
+	const availableProfiles: ProfileInfo[] = options.includeTemporary
+		? [
+				{
+					name: "temporary",
+					path: "",
+					isDefault: false,
+					isRelative: false,
+				},
+				...profiles,
+			]
+		: profiles;
+
+	if (availableProfiles.length === 0)
+		throw new Error("No Firefox profile detected.");
+	if (availableProfiles.length === 1) return availableProfiles[0].name;
+
+	if (!process.stdin.isTTY || !process.stdout.isTTY) {
+		if (options.includeTemporary) return "temporary";
+		const profileNames = profiles.map((profile) => profile.name).join(", ");
+		throw new Error(
+			`Multiple Firefox profiles detected (${profileNames}). Specify target profile with -p, --profile <name>.`,
+		);
+	}
+
+	const initialValue = options.includeTemporary
+		? "temporary"
+		: availableProfiles.find((profile) => profile.isDefault)?.name ||
+			availableProfiles[0].name;
+
+	const selected = await select({
+		message: "Select Firefox profile:",
+		options: availableProfiles.map((profile) => ({
+			value: profile.name,
+			label: profile.name,
+			hint: profile.isDefault ? "default" : undefined,
+		})),
+		initialValue: initialValue,
+	});
+
+	if (isCancel(selected)) {
+		cancel("Operation cancelled.");
+		process.exit(130);
+	}
+
+	return selected as string;
 }

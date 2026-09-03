@@ -1,7 +1,8 @@
-import type {} from "./selenium-webdriver.d.ts";
 import { Builder, By, type WebDriver } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox.js";
-
+import { getProfileDir } from "./profiles.js";
+import { styleRegistry } from "./registry.js";
+import type {} from "./selenium-webdriver.d.ts";
 import type {
 	BrowserToolboxLauncherModule,
 	BrowserToolboxResult,
@@ -16,8 +17,6 @@ import type {
 	UiElementDetails,
 	UiNodeHierarchy,
 } from "./types.js";
-import { resolveProfileDirectoryByName } from "./profiles.js";
-import { styleRegistry } from "./registry.js";
 
 export class FirefoxManager {
 	private driver: WebDriver | null = null;
@@ -60,7 +59,7 @@ export class FirefoxManager {
 
 		if (binaryPath) options.setBinary(binaryPath);
 		if (profileName) {
-			const profileDirectory = resolveProfileDirectoryByName(profileName);
+			const profileDirectory = getProfileDir(profileName);
 			options.setProfile(profileDirectory);
 		}
 
