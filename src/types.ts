@@ -76,28 +76,26 @@ export interface CssCompilationResult {
 	importedFiles: string[];
 }
 
+export type CreateStylesheetTarget = "both" | "chrome" | "content";
+
 export interface CreateCommandOptions {
-	chromePath?: string;
-	contentPath?: string;
 	force?: boolean;
+	name?: string;
+	target?: CreateStylesheetTarget;
 }
 
 export interface StartCommandOptions {
-	profileName?: string;
-	chromePath?: string;
-	contentPath?: string;
 	binaryPath?: string;
 	headless?: boolean;
 	novaUi?: boolean;
+	profileName?: string;
 	watch?: boolean;
 }
 
 export interface InstallCommandOptions {
-	profileName?: string;
-	chromePath?: string;
-	contentPath?: string;
-	merge?: boolean;
 	force?: boolean;
+	merge?: boolean;
+	profileName?: string;
 }
 
 export interface McpCommandOptions {

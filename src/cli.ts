@@ -21,21 +21,25 @@ program
 	.version(packageJson.version, "-v, --version", "Show version number");
 
 program
-	.command("create")
-	.description("Scaffold starter userChrome.css and userContent.css files")
-	.option("-c, --chrome <path>", "Path to userChrome.css")
-	.option("-u, --content <path>", "Path to userContent.css")
-	.option("-f, --force", "Overwrite existing files without confirmation")
+	.command("create [name]")
+	.description("Scaffold a new Firefox CSS theme package")
+	.option(
+		"-t, --target <target>",
+		"Stylesheet target: both, chrome, or content",
+	)
+	.option("-f, --force", "Overwrite existing files")
 	.action(
-		async (options: {
-			chrome?: string;
-			content?: string;
-			force?: boolean;
-		}) => {
+		async (
+			name: string | undefined,
+			options: {
+				force?: boolean;
+				target?: "both" | "chrome" | "content";
+			},
+		) => {
 			await createCommand({
-				chromePath: options.chrome,
-				contentPath: options.content,
 				force: options.force,
+				name: name,
+				target: options.target,
 			});
 		},
 	);
@@ -45,36 +49,24 @@ program
 	.description(
 		"Launch Firefox with live stylesheet bundling and hot-reloading",
 	)
-	.option("-p, --profile <name>", "Designate Firefox profile name")
-	.option(
-		"-c, --chrome <path>",
-		"Path to userChrome.css (default: ./userChrome.css)",
-	)
-	.option(
-		"-u, --content <path>",
-		"Path to userContent.css (default: ./userContent.css)",
-	)
-	.option("--binary <path>", "Path to custom Firefox executable")
-	.option("--headless", "Run Firefox in headless mode")
-	.option("--nova-ui", "Enable Firefox Nova UI preferences")
-	.option("--no-watch", "Disable file watching in start mode")
+	.option("-b, --binary <path>", "Path to Firefox executable")
+	.option("-p, --profile <name>", "Firefox profile name")
+	.option("--no-watch", "Disable file watching")
+	.option("--headless", "Run in headless mode")
+	.option("--nova-ui", "Enable Firefox Nova UI")
 	.action(
 		async (options: {
-			profile?: string;
-			chrome?: string;
-			content?: string;
 			binary?: string;
 			headless?: boolean;
 			novaUi?: boolean;
+			profile?: string;
 			watch: boolean;
 		}) => {
 			await startCommand({
-				profileName: options.profile,
-				chromePath: options.chrome,
-				contentPath: options.content,
 				binaryPath: options.binary,
 				headless: options.headless,
 				novaUi: options.novaUi,
+				profileName: options.profile,
 				watch: options.watch,
 			});
 		},
@@ -82,28 +74,20 @@ program
 
 program
 	.command("install")
-	.description(
-		"Install compiled stylesheets into a Firefox profile's chrome folder",
-	)
-	.option("-p, --profile <name>", "Target Firefox profile name")
-	.option("-c, --chrome <path>", "Path to userChrome.css")
-	.option("-u, --content <path>", "Path to userContent.css")
-	.option("-m, --merge", "Merge with existing theme stylesheets")
-	.option("-f, --force", "Overwrite existing files without confirmation")
+	.description("Install compiled stylesheets into a Firefox profile")
+	.option("-p, --profile <name>", "Firefox profile name")
+	.option("-m, --merge", "Merge with existing stylesheets")
+	.option("-f, --force", "Overwrite existing files")
 	.action(
 		async (options: {
-			profile?: string;
-			chrome?: string;
-			content?: string;
-			merge?: boolean;
 			force?: boolean;
+			merge?: boolean;
+			profile?: string;
 		}) => {
 			await installCommand({
-				profileName: options.profile,
-				chromePath: options.chrome,
-				contentPath: options.content,
-				merge: options.merge,
 				force: options.force,
+				merge: options.merge,
+				profileName: options.profile,
 			});
 		},
 	);
@@ -111,10 +95,10 @@ program
 program
 	.command("mcp")
 	.description("Start the Model Context Protocol (MCP) server")
-	.option("-p, --profile <name>", "Designate Firefox profile name")
-	.option("--binary <path>", "Path to custom Firefox executable")
-	.option("--headless", "Run Firefox in headless mode")
-	.option("--nova-ui", "Enable Firefox Nova UI preferences")
+	.option("-b, --binary <path>", "Path to Firefox executable")
+	.option("-p, --profile <name>", "Firefox profile name")
+	.option("--headless", "Run in headless mode")
+	.option("--nova-ui", "Enable Firefox Nova UI")
 	.allowUnknownOption()
 	.action(
 		async (options: {

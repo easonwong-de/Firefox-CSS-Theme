@@ -86,16 +86,16 @@ export async function installCommand(
 	const profileDir = getProfileDir(profileName);
 	const chromeDir = path.join(profileDir, "chrome");
 
-	const srcChromePath = options.chromePath
-		? path.resolve(process.cwd(), options.chromePath)
-		: existsSync(path.resolve(process.cwd(), "userChrome.css"))
-			? path.resolve(process.cwd(), "userChrome.css")
-			: undefined;
-	const srcContentPath = options.contentPath
-		? path.resolve(process.cwd(), options.contentPath)
-		: existsSync(path.resolve(process.cwd(), "userContent.css"))
-			? path.resolve(process.cwd(), "userContent.css")
-			: undefined;
+	const srcChromePath = existsSync(
+		path.resolve(process.cwd(), "userChrome.css"),
+	)
+		? path.resolve(process.cwd(), "userChrome.css")
+		: undefined;
+	const srcContentPath = existsSync(
+		path.resolve(process.cwd(), "userContent.css"),
+	)
+		? path.resolve(process.cwd(), "userContent.css")
+		: undefined;
 	if (!srcChromePath && !srcContentPath) {
 		log.warn("No stylesheet files found to install.");
 		return;

@@ -120,14 +120,8 @@ export async function startCommand(
 		log.info("Using temporary profile.");
 	}
 
-	const chromePath = path.resolve(
-		process.cwd(),
-		options.chromePath || "userChrome.css",
-	);
-	const contentPath = path.resolve(
-		process.cwd(),
-		options.contentPath || "userContent.css",
-	);
+	const chromePath = path.resolve(process.cwd(), "userChrome.css");
+	const contentPath = path.resolve(process.cwd(), "userContent.css");
 
 	const chromeTarget = createWatchTarget(
 		chromePath,

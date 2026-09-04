@@ -1,0 +1,13 @@
+{
+	"name": "{{NAME}}",
+	"version": "0.1.0",
+	"description": "Firefox CSS theme",
+	"type": "module",
+	"scripts": {
+		"start": "firefox-css-theme start",
+		"install:theme": "firefox-css-theme install"
+	},
+	"devDependencies": {
+		"firefox-css-theme": "{{VERSION}}"
+	}
+}
