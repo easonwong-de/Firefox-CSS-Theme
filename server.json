@@ -6,7 +6,7 @@
 		"url": "https://github.com/easonwong-de/Firefox-CSS-Theme",
 		"source": "github"
 	},
-	"version": "0.2.6",
+	"version": "0.2.7",
 	"packages": [
 		{
 			"registryType": "npm",
