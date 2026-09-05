@@ -39,7 +39,6 @@ jobs:
               run: npm publish --provenance --access public
 
     publish-mcp:
-        needs: publish-npm
         runs-on: ubuntu-latest
         permissions:
             contents: read
