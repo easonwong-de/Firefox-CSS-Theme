@@ -1,20 +1,100 @@
 name: Publish Package
 
 on:
-    push:
-        tags:
-            - "v*"
     workflow_dispatch:
+        inputs:
+            version:
+                description: "Version to publish (e.g. 1.0.0)"
+                required: true
+                type: string
 
 jobs:
-    publish-npm:
+    bump:
         runs-on: ubuntu-latest
         permissions:
             contents: write
+            pull-requests: write
+        outputs:
+            tag: ${{ steps.bump.outputs.tag }}
+            version: ${{ steps.bump.outputs.version }}
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+              with:
+                  ref: main
+                  fetch-depth: 0
+                  token: ${{ secrets.GITHUB_TOKEN }}
+            - name: Set up Node.js
+              uses: actions/setup-node@v7
+              with:
+                  node-version: 24
+                  cache: npm
+            - name: Bump version and merge pull request
+              id: bump
+              run: |
+                  VERSION="${RAW#v}"
+                  TAG="v${VERSION}"
+                  echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+                  echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+                  git config user.name "github-actions[bot]"
+                  git config user.email \
+                      "github-actions[bot]@users.noreply.github.com"
+                  git checkout -b "bump/${VERSION}"
+
+                  npm version "${VERSION}" --no-git-tag-version
+                  echo "$(jq --arg v "^${VERSION}" \
+                      '.devDependencies["firefox-css-theme"] = $v' \
+                      templates/package.json)" > templates/package.json
+                  echo "$(jq --arg v "${VERSION}" \
+                      '.version = $v | .packages[].version = $v' \
+                      server.json)" > server.json
+                  npm run format
+
+                  git commit -am "chore: bump version to ${VERSION}"
+                  git push origin "bump/${VERSION}" --force
+
+                  gh pr create --fill || true
+                  for i in {1..10}; do
+                      gh pr merge --merge --delete-branch && break
+                      [ "$i" -eq 10 ] && exit 1
+                      sleep 2
+                  done
+              env:
+                  RAW: ${{ inputs.version }}
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    publish-github:
+        needs: bump
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+              with:
+                  ref: main
+            - name: Create GitHub release
+              run: |
+                  gh release create "${{ needs.bump.outputs.tag }}" \
+                      --target main \
+                      --title "${{ needs.bump.outputs.tag }}" \
+                      --generate-notes
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    publish-npm:
+        needs: bump
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
             id-token: write
         steps:
             - name: Checkout repository
               uses: actions/checkout@v7
+              with:
+                  ref: main
             - name: Set up Node.js
               uses: actions/setup-node@v7
               with:
@@ -25,20 +105,11 @@ jobs:
               run: npm ci --silent
             - name: Build package
               run: npm run build
-            - name: Extract package version
-              id: package_version
-              run: echo "VERSION=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-            - name: Create GitHub release
-              run: |
-                  gh release create "v${{ steps.package_version.outputs.VERSION }}" \
-                      --title "v${{ steps.package_version.outputs.VERSION }}" \
-                      --generate-notes
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             - name: Publish to npm
               run: npm publish --provenance --access public
 
     publish-mcp:
+        needs: bump
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -46,11 +117,15 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v7
+              with:
+                  ref: main
             - name: Install mcp-publisher
               run: |
                   OS=$(uname -s | tr '[:upper:]' '[:lower:]')
                   ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-                  URL="https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_${OS}_${ARCH}.tar.gz"
+                  ASSET="mcp-publisher_${OS}_${ARCH}.tar.gz"
+                  BASE_URL="https://github.com/modelcontextprotocol"
+                  URL="${BASE_URL}/registry/releases/latest/download/${ASSET}"
                   curl -fsSL "$URL" | tar -xz mcp-publisher
                   chmod +x mcp-publisher
             - name: Authenticate via OIDC
