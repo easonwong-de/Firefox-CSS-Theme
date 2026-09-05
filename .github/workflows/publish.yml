@@ -29,18 +29,21 @@ jobs:
               with:
                   node-version: 24
                   cache: npm
+            - name: Install dependencies
+              run: npm ci --silent
             - name: Bump version and merge pull request
               id: bump
               run: |
                   VERSION="${RAW#v}"
                   TAG="v${VERSION}"
+                  BRANCH="bump/${VERSION}"
                   echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
                   echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
                   git config user.name "github-actions[bot]"
                   git config user.email \
                       "github-actions[bot]@users.noreply.github.com"
-                  git checkout -b "bump/${VERSION}"
+                  git checkout -b "$BRANCH"
 
                   npm version "${VERSION}" --no-git-tag-version
                   echo "$(jq --arg v "^${VERSION}" \
@@ -52,36 +55,20 @@ jobs:
                   npm run format
 
                   git commit -am "chore: bump version to ${VERSION}"
-                  git push origin "bump/${VERSION}" --force
+                  git push origin "$BRANCH" --force
 
-                  gh pr create --fill || true
+                  gh pr create --fill || \
+                      gh pr view "$BRANCH" >/dev/null
+                  git checkout main
                   for i in {1..10}; do
-                      gh pr merge --merge --delete-branch && break
+                      gh pr merge "$BRANCH" \
+                          --merge --delete-branch && break
                       [ "$i" -eq 10 ] && exit 1
                       sleep 2
                   done
               env:
                   RAW: ${{ inputs.version }}
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    publish-github:
-        needs: bump
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v7
-              with:
-                  ref: main
-            - name: Create GitHub release
-              run: |
-                  gh release create "${{ needs.bump.outputs.tag }}" \
-                      --target main \
-                      --title "${{ needs.bump.outputs.tag }}" \
-                      --generate-notes
-              env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     publish-npm:
@@ -103,13 +90,11 @@ jobs:
                   registry-url: "https://registry.npmjs.org"
             - name: Install dependencies
               run: npm ci --silent
-            - name: Build package
-              run: npm run build
             - name: Publish to npm
               run: npm publish --provenance --access public
 
     publish-mcp:
-        needs: bump
+        needs: publish-npm
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -134,3 +119,24 @@ jobs:
               run: ./mcp-publisher validate server.json
             - name: Publish to MCP Registry
               run: ./mcp-publisher publish
+
+    publish-github:
+        needs: [bump, publish-npm]
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+              with:
+                  ref: main
+            - name: Create GitHub release
+              run: |
+                  gh release view "${TAG}" >/dev/null 2>&1 || \
+                      gh release create "${TAG}" \
+                          --target main \
+                          --title "${TAG}" \
+                          --generate-notes
+              env:
+                  TAG: ${{ needs.bump.outputs.tag }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
