@@ -7,7 +7,7 @@ import {
 	writeFileSync,
 } from "node:fs";
 import path from "node:path";
-import { cancel, confirm, isCancel, log } from "@clack/prompts";
+import { cancel, confirm, intro, isCancel, log, outro } from "@clack/prompts";
 import { compileCssString } from "../processor.js";
 import { getProfileDir, listProfiles, selectProfile } from "../profiles.js";
 import type { InstallCommandOptions } from "../types.js";
@@ -48,16 +48,14 @@ async function installStylesheet(
 ): Promise<void> {
 	if (!srcPath) return;
 	const sourceCss = readFileSync(srcPath, "utf8");
-	let mergedCss = sourceCss;
-
-	if (
+	const shouldMerge =
 		merge &&
 		existingCss &&
 		!existingCss.includes(sourceCss.trim()) &&
-		!sourceCss.includes(existingCss.trim())
-	) {
-		mergedCss = `${existingCss}\n\n${sourceCss}`;
-	}
+		!sourceCss.includes(existingCss.trim());
+	const mergedCss = shouldMerge
+		? `${existingCss}\n\n${sourceCss}`
+		: sourceCss;
 
 	const compiledBundle = await compileCssString(mergedCss, srcPath);
 	writeFileSync(destPath, compiledBundle.css, "utf8");
@@ -71,6 +69,9 @@ async function installStylesheet(
 export async function installCommand(
 	options: InstallCommandOptions = {},
 ): Promise<void> {
+	const isInteractive = Boolean(process.stdin.isTTY && process.stdout.isTTY);
+	if (isInteractive) intro("firefox-css-theme install");
+
 	let profileName = options.profileName;
 
 	if (!profileName) {
@@ -78,9 +79,10 @@ export async function installCommand(
 		if (profiles.length === 0)
 			throw new Error("No Firefox profile detected.");
 		profileName =
-			profiles.length === 1
-				? profiles[0].name
-				: await selectProfile(profiles);
+			isInteractive && profiles.length > 1
+				? await selectProfile(profiles)
+				: (profiles.find((profile) => profile.isDefault) || profiles[0])
+						.name;
 	}
 
 	const profileDir = getProfileDir(profileName);
@@ -122,6 +124,13 @@ export async function installCommand(
 				)
 			: readdirSync(chromeDir).length > 0);
 
+	if (requiresConfirmation && !isInteractive) {
+		log.warn(
+			`Existing theme files found in profile "${profileName}". Use --force to proceed without warning.`,
+		);
+		return;
+	}
+
 	if (requiresConfirmation) {
 		const shouldProceed = await confirm({
 			message: `Existing theme files will be ${
@@ -130,8 +139,8 @@ export async function installCommand(
 			initialValue: false,
 		});
 		if (isCancel(shouldProceed) || !shouldProceed) {
-			cancel("Install operation cancelled.");
-			return;
+			cancel("Operation cancelled.");
+			process.exit(130);
 		}
 	}
 
@@ -154,4 +163,10 @@ export async function installCommand(
 		options.merge,
 		existingContentCss,
 	);
+
+	if (isInteractive) {
+		outro(
+			`Installed theme stylesheets successfully into profile "${profileName}".`,
+		);
+	}
 }

@@ -21,11 +21,9 @@ export const testCase: TestCase = {
 			});
 		}
 
-		const temporaryDirectory = mkdtempSync(
-			path.join(os.tmpdir(), "postcss-test-"),
-		);
-		const partialFilePath = path.join(temporaryDirectory, "partial.css");
-		const rootFilePath = path.join(temporaryDirectory, "root.css");
+		const tempDir = mkdtempSync(path.join(os.tmpdir(), "postcss-test-"));
+		const partialFilePath = path.join(tempDir, "partial.css");
+		const rootFilePath = path.join(tempDir, "root.css");
 
 		try {
 			writeFileSync(
@@ -63,7 +61,7 @@ export const testCase: TestCase = {
 				);
 			}
 		} finally {
-			rmSync(temporaryDirectory, { force: true, recursive: true });
+			rmSync(tempDir, { force: true, recursive: true });
 		}
 	},
 };

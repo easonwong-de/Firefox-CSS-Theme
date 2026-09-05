@@ -10,13 +10,13 @@ import type { McpCommandOptions } from "../types.js";
 export async function startMcpServer(
 	options: McpCommandOptions = {},
 ): Promise<void> {
-	const packageJson = JSON.parse(
+	const pkgJson = JSON.parse(
 		readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
 	) as { name: string; version: string };
 
 	const server = new McpServer({
-		name: packageJson.name,
-		version: packageJson.version,
+		name: pkgJson.name,
+		version: pkgJson.version,
 	});
 
 	server.registerTool(

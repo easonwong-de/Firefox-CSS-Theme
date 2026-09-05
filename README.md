@@ -77,7 +77,7 @@ firefox-css-theme create [name] [options]
 | Option                  | Description                                 |
 | ----------------------- | ------------------------------------------- |
 | `-t, --target <target>` | Stylesheet target: both, chrome, or content |
-| `-f, --force`           | Overwrite existing files                    |
+| `-f, --force`           | Proceed without warning                     |
 
 ### `firefox-css-theme start`
 
@@ -115,7 +115,7 @@ firefox-css-theme install [options]
 | ---------------------- | ------------------------------- |
 | `-p, --profile <name>` | Firefox profile name            |
 | `-m, --merge`          | Merge with existing stylesheets |
-| `-f, --force`          | Overwrite existing files        |
+| `-f, --force`          | Proceed without warning         |
 
 > [!WARNING]
 > This operation will overwrite existing CSS themes in the profile unless `--merge` is specified. A backup is advised.

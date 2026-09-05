@@ -19,9 +19,7 @@ import {
 } from "@clack/prompts";
 import type { CreateCommandOptions, CreateStylesheetTarget } from "../types.js";
 
-const templateDirectory = fileURLToPath(
-	new URL("../../templates", import.meta.url),
-);
+const templateDir = fileURLToPath(new URL("../../templates", import.meta.url));
 
 /** Cancels the active prompt operation and terminates execution. */
 function handleCancellation(value: unknown): void {
@@ -31,21 +29,20 @@ function handleCancellation(value: unknown): void {
 }
 
 /**
- * Scaffolds a starter stylesheet template file on disk if it does not already
- * exist or if forced.
+ * Scaffolds a starter stylesheet template file on disk.
  */
 function createStylesheetFile(
-	targetDirectory: string,
+	targetDir: string,
 	relativeFilePath: string,
 	templateFileName: string,
 ): void {
-	const resolvedPath = path.resolve(targetDirectory, relativeFilePath);
-	const parentDirectory = path.dirname(resolvedPath);
-	if (!existsSync(parentDirectory)) {
-		mkdirSync(parentDirectory, { recursive: true });
+	const resolvedPath = path.resolve(targetDir, relativeFilePath);
+	const parentDir = path.dirname(resolvedPath);
+	if (!existsSync(parentDir)) {
+		mkdirSync(parentDir, { recursive: true });
 	}
 	const templateContent = readFileSync(
-		path.join(templateDirectory, templateFileName),
+		path.join(templateDir, templateFileName),
 		"utf8",
 	);
 	writeFileSync(resolvedPath, templateContent, "utf8");
@@ -83,13 +80,11 @@ export async function createCommand(
 	}
 	if (!chosenThemeName) chosenThemeName = "my-firefox-theme";
 
-	const isCurrentDirectory = chosenThemeName === ".";
-	const projectDirectory = isCurrentDirectory
+	const isCurrentDir = chosenThemeName === ".";
+	const projectDir = isCurrentDir
 		? process.cwd()
 		: path.resolve(process.cwd(), chosenThemeName);
-	const packageName = isCurrentDirectory
-		? path.basename(projectDirectory)
-		: chosenThemeName;
+	const pkgName = isCurrentDir ? path.basename(projectDir) : chosenThemeName;
 
 	let chosenTarget = options.target;
 	if (!chosenTarget && isInteractive) {
@@ -98,7 +93,7 @@ export async function createCommand(
 			options: [
 				{
 					value: "both",
-					label: "Both userChrome.css and userContent.css",
+					label: "userChrome.css & userContent.css",
 					hint: "customise browser chrome and web content",
 				},
 				{
@@ -119,12 +114,12 @@ export async function createCommand(
 	}
 	if (!chosenTarget) chosenTarget = "both";
 
-	if (existsSync(projectDirectory)) {
-		const existingEntries = readdirSync(projectDirectory);
+	if (existsSync(projectDir)) {
+		const existingEntries = readdirSync(projectDir);
 		if (existingEntries.length > 0 && !options.force) {
 			if (!isInteractive) {
 				log.warn(
-					`Directory "${chosenThemeName}" is not empty. Use --force to overwrite.`,
+					`Directory "${chosenThemeName}" is not empty. Use --force to proceed without warning.`,
 				);
 				return;
 			}
@@ -138,78 +133,55 @@ export async function createCommand(
 			}
 		}
 	} else {
-		mkdirSync(projectDirectory, { recursive: true });
+		mkdirSync(projectDir, { recursive: true });
 	}
 
-	const packageJson = JSON.parse(
-		readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
-	) as { version?: string };
-	const dependencyVersion = packageJson.version
-		? `^${packageJson.version}`
-		: "^0.2.6";
-
-	const packageJsonTemplate = readFileSync(
-		path.join(templateDirectory, "package.json"),
+	const pkgJsonTemplate = readFileSync(
+		path.join(templateDir, "package.json"),
 		"utf8",
 	);
-	const generatedPackageJson = packageJsonTemplate
-		.replace("{{NAME}}", packageName)
-		.replace("{{VERSION}}", dependencyVersion);
+	const generatedPkgJson = pkgJsonTemplate.replace("{{NAME}}", pkgName);
 
 	const gitignoreTemplate = readFileSync(
-		path.join(templateDirectory, "gitignore"),
+		path.join(templateDir, "gitignore"),
 		"utf8",
 	);
 
 	const readmeTemplate = readFileSync(
-		path.join(templateDirectory, "README.md"),
+		path.join(templateDir, "README.md"),
 		"utf8",
 	);
-	const generatedReadme = readmeTemplate.replace("{{NAME}}", packageName);
+	const generatedReadme = readmeTemplate.replace("{{NAME}}", pkgName);
 
 	writeFileSync(
-		path.join(projectDirectory, "package.json"),
-		generatedPackageJson,
+		path.join(projectDir, "package.json"),
+		generatedPkgJson,
 		"utf8",
 	);
 	writeFileSync(
-		path.join(projectDirectory, ".gitignore"),
+		path.join(projectDir, ".gitignore"),
 		gitignoreTemplate,
 		"utf8",
 	);
-	writeFileSync(
-		path.join(projectDirectory, "README.md"),
-		generatedReadme,
-		"utf8",
-	);
+	writeFileSync(path.join(projectDir, "README.md"), generatedReadme, "utf8");
 
 	if (chosenTarget === "both" || chosenTarget === "chrome") {
-		createStylesheetFile(
-			projectDirectory,
-			"userChrome.css",
-			"userChrome.css",
-		);
+		createStylesheetFile(projectDir, "userChrome.css", "userChrome.css");
 	}
 
 	if (chosenTarget === "both" || chosenTarget === "content") {
-		createStylesheetFile(
-			projectDirectory,
-			"userContent.css",
-			"userContent.css",
-		);
+		createStylesheetFile(projectDir, "userContent.css", "userContent.css");
 	}
 
 	if (isInteractive) {
-		const nextSteps = isCurrentDirectory
+		const nextSteps = isCurrentDir
 			? "npm install\n  npm run start"
 			: `cd ${chosenThemeName}\n  npm install\n  npm run start`;
 		outro(
-			`Scaffolded ${packageName} successfully.\n\nNext steps:\n  ${nextSteps}`,
+			`Scaffolded ${pkgName} successfully.\n\nNext steps:\n  ${nextSteps}`,
 		);
 		return;
 	}
 
-	log.success(
-		`Scaffolded ${packageName} successfully in ${projectDirectory}`,
-	);
+	log.success(`Scaffolded ${pkgName} successfully in ${projectDir}`);
 }

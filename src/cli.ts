@@ -9,7 +9,7 @@ import { installCommand } from "./commands/install.js";
 import { startMcpServer } from "./commands/mcp.js";
 import { startCommand } from "./commands/start.js";
 
-const packageJson = JSON.parse(
+const pkgJson = JSON.parse(
 	readFileSync(new URL("../package.json", import.meta.url), "utf8"),
 ) as { name: string; version: string; description: string };
 
@@ -17,8 +17,8 @@ const program = new Command();
 
 program
 	.name("firefox-css-theme")
-	.description(packageJson.description)
-	.version(packageJson.version, "-v, --version", "Show version number");
+	.description(pkgJson.description)
+	.version(pkgJson.version, "-v, --version", "Show version number");
 
 program
 	.command("create [name]")
@@ -27,7 +27,7 @@ program
 		"-t, --target <target>",
 		"Stylesheet target: both, chrome, or content",
 	)
-	.option("-f, --force", "Overwrite existing files")
+	.option("-f, --force", "Proceed without warning")
 	.action(
 		async (
 			name: string | undefined,
@@ -77,7 +77,7 @@ program
 	.description("Install compiled stylesheets into a Firefox profile")
 	.option("-p, --profile <name>", "Firefox profile name")
 	.option("-m, --merge", "Merge with existing stylesheets")
-	.option("-f, --force", "Overwrite existing files")
+	.option("-f, --force", "Proceed without warning")
 	.action(
 		async (options: {
 			force?: boolean;

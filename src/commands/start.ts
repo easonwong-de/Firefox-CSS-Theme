@@ -107,7 +107,7 @@ export async function startCommand(
 		const profiles = listProfiles();
 		if (profiles.length > 0) {
 			const selected = await selectProfile(profiles, {
-				includeTemporary: true,
+				includeTemp: true,
 			});
 			if (selected !== "temporary") profileName = selected;
 		}

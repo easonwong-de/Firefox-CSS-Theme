@@ -62,11 +62,9 @@ export function sleep(milliseconds: number): Promise<void> {
 }
 
 /** Discovers and loads test cases from spec files in a directory. */
-export async function getTestCases(directoryPath: string): Promise<TestCase[]> {
-	const directoryEntries = await fs.readdir(directoryPath, {
-		withFileTypes: true,
-	});
-	const specificationFiles = directoryEntries
+export async function getTestCases(dirPath: string): Promise<TestCase[]> {
+	const dirEntries = await fs.readdir(dirPath, { withFileTypes: true });
+	const specificationFiles = dirEntries
 		.filter(
 			(entry) =>
 				entry.isFile() &&
@@ -78,10 +76,7 @@ export async function getTestCases(directoryPath: string): Promise<TestCase[]> {
 
 	const testCases: TestCase[] = [];
 	for (const specificationFile of specificationFiles) {
-		const specificationFilePath = path.join(
-			directoryPath,
-			specificationFile,
-		);
+		const specificationFilePath = path.join(dirPath, specificationFile);
 		const moduleExports = await import(specificationFilePath);
 		if (moduleExports.testCase) {
 			testCases.push(moduleExports.testCase as TestCase);

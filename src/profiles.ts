@@ -18,10 +18,10 @@ export function getConfigDir(): string {
 		);
 	}
 	if (process.platform === "win32") {
-		const applicationDataDirectory =
+		const appDataDir =
 			process.env.APPDATA ||
 			path.join(os.homedir(), "AppData", "Roaming");
-		return path.join(applicationDataDirectory, "Mozilla", "Firefox");
+		return path.join(appDataDir, "Mozilla", "Firefox");
 	}
 	return path.join(os.homedir(), ".mozilla", "firefox");
 }
@@ -104,7 +104,7 @@ export function getProfileDir(profileName: string): string {
 }
 
 export interface SelectProfileOptions {
-	includeTemporary?: boolean;
+	includeTemp?: boolean;
 }
 
 /**
@@ -115,7 +115,7 @@ export async function selectProfile(
 	profiles: ProfileInfo[],
 	options: SelectProfileOptions = {},
 ): Promise<string> {
-	const availableProfiles: ProfileInfo[] = options.includeTemporary
+	const availableProfiles: ProfileInfo[] = options.includeTemp
 		? [
 				{
 					name: "temporary",
@@ -132,14 +132,14 @@ export async function selectProfile(
 	if (availableProfiles.length === 1) return availableProfiles[0].name;
 
 	if (!process.stdin.isTTY || !process.stdout.isTTY) {
-		if (options.includeTemporary) return "temporary";
+		if (options.includeTemp) return "temporary";
 		const profileNames = profiles.map((profile) => profile.name).join(", ");
 		throw new Error(
 			`Multiple Firefox profiles detected (${profileNames}). Specify target profile with -p, --profile <name>.`,
 		);
 	}
 
-	const initialValue = options.includeTemporary
+	const initialValue = options.includeTemp
 		? "temporary"
 		: availableProfiles.find((profile) => profile.isDefault)?.name ||
 			availableProfiles[0].name;

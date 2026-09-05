@@ -7,13 +7,13 @@ import type { TestCase } from "../types.js";
 export const testCase: TestCase = {
 	name: "Theme Project Scaffolding",
 	async run({ results }) {
-		const baseTemporaryDirectory = mkdtempSync(
+		const baseTempDir = mkdtempSync(
 			path.join(os.tmpdir(), "firefox-theme-create-test-"),
 		);
-		const originalWorkingDirectory = process.cwd();
+		const originalWorkingDir = process.cwd();
 
 		try {
-			process.chdir(baseTemporaryDirectory);
+			process.chdir(baseTempDir);
 
 			await createCommand({
 				force: true,
@@ -21,18 +21,15 @@ export const testCase: TestCase = {
 				target: "both",
 			});
 
-			const themeDirectory = path.join(
-				baseTemporaryDirectory,
-				"test-theme",
-			);
-			const packageJsonPath = path.join(themeDirectory, "package.json");
-			const gitignorePath = path.join(themeDirectory, ".gitignore");
-			const readmePath = path.join(themeDirectory, "README.md");
-			const chromeCssPath = path.join(themeDirectory, "userChrome.css");
-			const contentCssPath = path.join(themeDirectory, "userContent.css");
+			const themeDir = path.join(baseTempDir, "test-theme");
+			const pkgJsonPath = path.join(themeDir, "package.json");
+			const gitignorePath = path.join(themeDir, ".gitignore");
+			const readmePath = path.join(themeDir, "README.md");
+			const chromeCssPath = path.join(themeDir, "userChrome.css");
+			const contentCssPath = path.join(themeDir, "userContent.css");
 
 			if (
-				existsSync(packageJsonPath) &&
+				existsSync(pkgJsonPath) &&
 				existsSync(gitignorePath) &&
 				existsSync(readmePath) &&
 				existsSync(chromeCssPath) &&
@@ -45,20 +42,18 @@ export const testCase: TestCase = {
 				results.fail("Missing expected files in scaffolded theme");
 			}
 
-			const parsedPackage = JSON.parse(
-				readFileSync(packageJsonPath, "utf8"),
-			) as {
+			const parsedPkg = JSON.parse(readFileSync(pkgJsonPath, "utf8")) as {
 				devDependencies?: Record<string, string>;
 				name?: string;
 				scripts?: Record<string, string>;
 			};
 
 			if (
-				parsedPackage.name === "test-theme" &&
-				parsedPackage.scripts?.start === "firefox-css-theme start" &&
-				parsedPackage.scripts?.["install:theme"] ===
+				parsedPkg.name === "test-theme" &&
+				parsedPkg.scripts?.start === "firefox-css-theme start" &&
+				parsedPkg.scripts?.["install:theme"] ===
 					"firefox-css-theme install" &&
-				parsedPackage.devDependencies?.["firefox-css-theme"]
+				parsedPkg.devDependencies?.["firefox-css-theme"]
 			) {
 				results.pass(
 					"package.json configured with required scripts and dependency",
@@ -66,7 +61,7 @@ export const testCase: TestCase = {
 			} else {
 				results.fail(
 					"package.json contents do not match expected schema",
-					{ parsedPackage },
+					{ parsedPkg: parsedPkg },
 				);
 			}
 
@@ -76,13 +71,10 @@ export const testCase: TestCase = {
 				target: "chrome",
 			});
 
-			const chromeOnlyDirectory = path.join(
-				baseTemporaryDirectory,
-				"chrome-only-theme",
-			);
+			const chromeOnlyDir = path.join(baseTempDir, "chrome-only-theme");
 			if (
-				existsSync(path.join(chromeOnlyDirectory, "userChrome.css")) &&
-				!existsSync(path.join(chromeOnlyDirectory, "userContent.css"))
+				existsSync(path.join(chromeOnlyDir, "userChrome.css")) &&
+				!existsSync(path.join(chromeOnlyDir, "userContent.css"))
 			) {
 				results.pass("Scaffolded theme with userChrome.css only");
 			} else {
@@ -95,23 +87,18 @@ export const testCase: TestCase = {
 				target: "content",
 			});
 
-			const contentOnlyDirectory = path.join(
-				baseTemporaryDirectory,
-				"content-only-theme",
-			);
+			const contentOnlyDir = path.join(baseTempDir, "content-only-theme");
 			if (
-				!existsSync(
-					path.join(contentOnlyDirectory, "userChrome.css"),
-				) &&
-				existsSync(path.join(contentOnlyDirectory, "userContent.css"))
+				!existsSync(path.join(contentOnlyDir, "userChrome.css")) &&
+				existsSync(path.join(contentOnlyDir, "userContent.css"))
 			) {
 				results.pass("Scaffolded theme with userContent.css only");
 			} else {
 				results.fail("Stylesheet mismatch for content-only target");
 			}
 		} finally {
-			process.chdir(originalWorkingDirectory);
-			rmSync(baseTemporaryDirectory, { force: true, recursive: true });
+			process.chdir(originalWorkingDir);
+			rmSync(baseTempDir, { force: true, recursive: true });
 		}
 	},
 };

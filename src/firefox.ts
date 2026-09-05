@@ -59,8 +59,8 @@ export class FirefoxManager {
 
 		if (binaryPath) options.setBinary(binaryPath);
 		if (profileName) {
-			const profileDirectory = getProfileDir(profileName);
-			options.setProfile(profileDirectory);
+			const profileDir = getProfileDir(profileName);
+			options.setProfile(profileDir);
 		}
 
 		const service = new firefox.ServiceBuilder()
