@@ -117,8 +117,24 @@ jobs:
               run: ./mcp-publisher login github-oidc
             - name: Validate server configuration
               run: ./mcp-publisher validate server.json
+            - name: Wait for npm propagation
+              run: |
+                  VERSION=$(jq -r .version server.json)
+                  for i in {1..12}; do
+                      if [ "$(npm view firefox-css-theme@${VERSION} version 2>/dev/null)" = "${VERSION}" ]; then
+                          sleep 10
+                          exit 0
+                      fi
+                      sleep 5
+                  done
+                  exit 1
             - name: Publish to MCP Registry
-              run: ./mcp-publisher publish
+              run: |
+                  for i in {1..5}; do
+                      ./mcp-publisher publish && break
+                      [ "$i" -eq 5 ] && exit 1
+                      sleep 15
+                  done
 
     publish-github:
         needs: [bump, publish-npm]

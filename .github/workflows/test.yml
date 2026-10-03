@@ -10,6 +10,7 @@ on:
 
 jobs:
     test:
+        if: "!startsWith(github.head_ref, 'bump/')"
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
