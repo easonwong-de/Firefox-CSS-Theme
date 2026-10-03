@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/firefox-css-theme)](https://www.npmjs.com/package/firefox-css-theme)
 [![Test](https://github.com/easonwong-de/Firefox-CSS-Theme/actions/workflows/test.yml/badge.svg)](https://github.com/easonwong-de/Firefox-CSS-Theme/actions/workflows/test.yml)
 
-A toolkit for Firefox CSS theme authors to scaffold, bundle, and live-debug theme repositories. It also provides end users with an automated installer.
+A toolkit for Firefox CSS theme authors to scaffold and live-debug theme repositories. For theme users, it’s an automated theme installer.
 
 A Model Context Protocol (MCP) server is also available for AI-assisted DOM inspection and live styling.
 
