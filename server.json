@@ -6,12 +6,12 @@
 		"url": "https://github.com/easonwong-de/Firefox-CSS-Theme",
 		"source": "github"
 	},
-	"version": "0.2.8",
+	"version": "0.2.9",
 	"packages": [
 		{
 			"registryType": "npm",
 			"identifier": "firefox-css-theme",
-			"version": "0.2.8",
+			"version": "0.2.9",
 			"transport": { "type": "stdio" },
 			"packageArguments": [{ "type": "positional", "value": "mcp" }]
 		}
