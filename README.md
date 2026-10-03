@@ -22,7 +22,7 @@ npx firefox-css-theme create
 
 This interactively prompts for your theme name and stylesheet targets (`userChrome.css`, `userContent.css`, or both).
 
-Launch Firefox with live CSS hot-reloading:
+If you have already opened the theme project, launch Firefox with live CSS hot-reloading with:
 
 ```bash
 npx firefox-css-theme start
