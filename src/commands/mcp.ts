@@ -28,12 +28,14 @@ export async function startMcpServer(
 				binaryPath: z
 					.string()
 					.optional()
-					.describe("Optional path to Firefox executable binary."),
+					.describe(
+						"Optional path to the Firefox executable binary.",
+					),
 				profileName: z
 					.string()
 					.optional()
 					.describe(
-						"Optional name of existing Firefox profile. If omitted, uses an isolated temporary profile.",
+						"Optional name of an existing Firefox profile. If omitted, uses an isolated temporary profile.",
 					),
 				headless: z
 					.boolean()
@@ -60,7 +62,7 @@ export async function startMcpServer(
 				content: [
 					{
 						type: "text",
-						text: "Firefox launched successfully in chrome context.",
+						text: "Firefox launched successfully in the chrome context.",
 					},
 				],
 			};
@@ -90,7 +92,7 @@ export async function startMcpServer(
 					.enum(["enter", "exit"])
 					.default("enter")
 					.describe(
-						"Action to perform on customise toolbar mode ('enter' or 'exit'). Defaults to 'enter'.",
+						"Action to perform for customise toolbar mode ('enter' or 'exit'). Defaults to 'enter'.",
 					),
 			},
 		},
@@ -110,12 +112,12 @@ export async function startMcpServer(
 		"get_ui_tree",
 		{
 			description:
-				"Retrieve the hierarchical DOM tree of the Firefox chrome user interface window.",
+				"Retrieve the hierarchical DOM tree of the selected UI element in the Firefox chrome window.",
 			inputSchema: {
 				rootSelector: z
 					.string()
 					.default("window")
-					.describe("CSS selector for root element."),
+					.describe("CSS selector for the root element."),
 				maxDepth: z
 					.number()
 					.default(3)
@@ -144,7 +146,7 @@ export async function startMcpServer(
 				selector: z
 					.string()
 					.describe(
-						"CSS selector to query in chrome document (e.g. '#nav-bar', '#TabsToolbar').",
+						"CSS selector to query in the chrome document (e.g. '#nav-bar', '#TabsToolbar').",
 					),
 			},
 		},
@@ -164,7 +166,7 @@ export async function startMcpServer(
 		"get_computed_styles",
 		{
 			description:
-				"Extract computed CSS properties for a Firefox UI chrome element.",
+				"Extract computed CSS property values for a Firefox UI chrome element.",
 			inputSchema: {
 				selector: z
 					.string()
@@ -194,13 +196,13 @@ export async function startMcpServer(
 		"inject_theme_css",
 		{
 			description:
-				"Inject or replace a live stylesheet in the Firefox window.",
+				"Inject or replace a live stylesheet into the Firefox window.",
 			inputSchema: {
 				css: z.string().describe("CSS rules to inject."),
 				id: z
 					.string()
 					.default("mcp-injected-style")
-					.describe("Identifier for the style."),
+					.describe("Identifier for the stylesheet."),
 				target: z
 					.enum(["chrome", "content"])
 					.describe(
@@ -234,11 +236,11 @@ export async function startMcpServer(
 			description:
 				"Remove an injected stylesheet from the Firefox window.",
 			inputSchema: {
-				id: z.string().describe("Identifier of the style to remove."),
+				id: z.string().describe("Identifier of the stylesheet to remove."),
 				target: z
 					.enum(["chrome", "content"])
 					.describe(
-						"Target scope of the style to remove: chrome or content.",
+						"Target scope of the stylesheet to remove: chrome or content.",
 					),
 			},
 		},
@@ -259,7 +261,7 @@ export async function startMcpServer(
 		"list_theme_css",
 		{
 			description:
-				"List all custom stylesheets currently injected in the Firefox window.",
+				"List all custom stylesheets currently injected into the Firefox window.",
 			inputSchema: {
 				target: z
 					.enum(["chrome", "content"])
@@ -318,7 +320,7 @@ export async function startMcpServer(
 				script: z
 					.string()
 					.describe(
-						"JavaScript code string to evaluate in chrome context.",
+						"JavaScript code string to evaluate in the chrome context.",
 					),
 			},
 		},

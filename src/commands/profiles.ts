@@ -6,12 +6,12 @@ export async function profilesCommand(): Promise<void> {
 	const profiles = listProfiles();
 	if (profiles.length === 0) {
 		log.warn(
-			"No Firefox profiles detected in default configuration directory.",
+			"No Firefox profiles detected in the default configuration directory.",
 		);
 		return;
 	}
 
-	log.info("Detected Firefox Profiles:");
+	log.info("Detected Firefox profiles:");
 	for (const profile of profiles) {
 		const defaultBadge = profile.isDefault ? " (default)" : "";
 		log.message(`  ${profile.name}${defaultBadge}\n    ${profile.path}`);

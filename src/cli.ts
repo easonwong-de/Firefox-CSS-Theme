@@ -22,7 +22,7 @@ program
 
 program
 	.command("create [name]")
-	.description("Scaffold a new Firefox CSS theme package")
+	.description("Scaffold a new Firefox CSS theme project")
 	.option(
 		"-t, --target <target>",
 		"Stylesheet target: both, chrome, or content",

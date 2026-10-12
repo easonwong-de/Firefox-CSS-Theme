@@ -109,7 +109,7 @@ export interface SelectProfileOptions {
 
 /**
  * Prompts the user to select a Firefox profile from a list using terminal arrow
- * keys and enter to confirm.
+ * keys and Enter to confirm.
  */
 export async function selectProfile(
 	profiles: ProfileInfo[],
@@ -135,7 +135,7 @@ export async function selectProfile(
 		if (options.includeTemp) return "temporary";
 		const profileNames = profiles.map((profile) => profile.name).join(", ");
 		throw new Error(
-			`Multiple Firefox profiles detected (${profileNames}). Specify target profile with -p, --profile <name>.`,
+			`Multiple Firefox profiles detected (${profileNames}). Specify the target profile with -p, --profile <name>.`,
 		);
 	}
 
@@ -145,7 +145,7 @@ export async function selectProfile(
 			availableProfiles[0].name;
 
 	const selected = await select({
-		message: "Select Firefox profile:",
+		message: "Select a Firefox profile:",
 		options: availableProfiles.map((profile) => ({
 			value: profile.name,
 			label: profile.name,

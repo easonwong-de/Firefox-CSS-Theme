@@ -22,7 +22,7 @@ export class FirefoxManager {
 	private driver: WebDriver | null = null;
 
 	/**
-	 * Launches and initialises a Firefox instance with marionette chrome
+	 * Launches and initialises a Firefox instance with Marionette chrome
 	 * debugging capabilities enabled.
 	 */
 	public async initialiseBrowser(
@@ -353,7 +353,7 @@ export class FirefoxManager {
 		);
 	}
 
-	/** Alias for initialise or manage Firefox toolbar customisation mode. */
+	/** Alias to initialise or manage Firefox toolbar customisation mode. */
 	public async customizeToolbar(
 		action: ToolbarCustomisationAction = "enter",
 	): Promise<ToolbarCustomisationResult> {
@@ -501,7 +501,7 @@ export class FirefoxManager {
 		return result;
 	}
 
-	/** Lists all active userChrome style elements injected in the DOM. */
+	/** Lists all active userChrome style elements injected into the DOM. */
 	public async listChromeStyles(): Promise<InjectedStyleDetails[]> {
 		await this.ensureChromeContext();
 
@@ -522,7 +522,7 @@ export class FirefoxManager {
 		}));
 	}
 
-	/** Lists all active userContent style sheets registered in memory. */
+	/** Lists all active userContent stylesheets registered in memory. */
 	public async listContentStyles(): Promise<InjectedStyleDetails[]> {
 		await this.ensureChromeContext();
 

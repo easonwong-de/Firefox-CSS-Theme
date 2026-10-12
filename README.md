@@ -3,9 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/firefox-css-theme)](https://www.npmjs.com/package/firefox-css-theme)
 [![Test](https://github.com/easonwong-de/Firefox-CSS-Theme/actions/workflows/test.yml/badge.svg)](https://github.com/easonwong-de/Firefox-CSS-Theme/actions/workflows/test.yml)
 
-A toolkit for Firefox CSS theme authors to scaffold and live-debug theme repositories. For theme users, it’s an automated theme installer.
-
-A Model Context Protocol (MCP) server is also available for AI-assisted DOM inspection and live styling.
+A toolkit for scaffolding, live-debugging, and installing Firefox CSS themes. For agentic DOM inspection and live styling, an MCP server is also available.
 
 ## Getting Started
 
@@ -22,7 +20,7 @@ npx firefox-css-theme create
 
 This interactively prompts for your theme name and stylesheet targets (`userChrome.css`, `userContent.css`, or both).
 
-If you have already opened the theme project, launch Firefox with live CSS hot-reloading with:
+If you have already opened a theme repository, launch Firefox with live CSS hot-reloading:
 
 ```bash
 npx firefox-css-theme start
@@ -39,9 +37,7 @@ Navigate to the theme directory and install the stylesheets:
 npx firefox-css-theme install
 ```
 
-The toolkit will look for and install `userChrome.css` and `userContent.css` in the present working directory into your Firefox profile.
-
-If multiple Firefox profiles exist, an interactive selection list will prompt you to choose one.
+The toolkit will look for `userChrome.css` and `userContent.css` in the current directory, and install them into the selected Firefox profile.
 
 For the full list of CLI options, run `npx firefox-css-theme --help`.
 
@@ -85,10 +81,10 @@ codex mcp add firefox-css-theme -- npx -y firefox-css-theme mcp --nova-ui
 - `launch_browser`: Launches Firefox with chrome debugging.
 - `close_browser`: Terminates the browser instance.
 - `customize_toolbar`: Toggles the Firefox "Customise Toolbar" mode.
-- `get_ui_tree`: Dumps the hierarchical DOM tree of selected UI element.
+- `get_ui_tree`: Dumps the hierarchical DOM tree of the selected UI element.
 - `query_ui_elements`: Queries elements matching a CSS selector in the browser chrome.
 - `get_computed_styles`: Extracts computed CSS property values of a specific UI element.
-- `inject_theme_css`: Injects a stylesheet in the live UI.
+- `inject_theme_css`: Injects a stylesheet into the live UI.
 - `remove_theme_css`: Removes an injected stylesheet.
 - `list_theme_css`: Lists all currently injected stylesheets.
 - `take_ui_screenshot`: Captures a screenshot of a specific UI component.

@@ -94,17 +94,17 @@ export async function createCommand(
 				{
 					value: "both",
 					label: "userChrome.css & userContent.css",
-					hint: "customise browser chrome and web content",
+					hint: "Customise browser chrome and web content",
 				},
 				{
 					value: "chrome",
 					label: "userChrome.css only",
-					hint: "customise Firefox browser interface",
+					hint: "Customise Firefox browser interface",
 				},
 				{
 					value: "content",
 					label: "userContent.css only",
-					hint: "customise web and internal pages",
+					hint: "Customise web and internal pages",
 				},
 			],
 			initialValue: "both",
