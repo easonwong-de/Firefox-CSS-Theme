@@ -120,7 +120,7 @@ jobs:
                   for i in {1..30}; do
                       PKG_VER=$(npm view \
                           "firefox-css-theme@${VERSION}" \
-                          version --prefer-online 2>/dev/null)
+                          version --prefer-online 2>/dev/null || true)
                       if [ "${PKG_VER}" = "${VERSION}" ]; then
                           sleep 10
                           exit 0
