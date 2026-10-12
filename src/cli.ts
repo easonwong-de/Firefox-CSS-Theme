@@ -53,19 +53,16 @@ program
 	.option("-p, --profile <name>", "Firefox profile name")
 	.option("--no-watch", "Disable file watching")
 	.option("--headless", "Run in headless mode")
-	.option("--nova-ui", "Enable Firefox Nova UI")
 	.action(
 		async (options: {
 			binary?: string;
 			headless?: boolean;
-			novaUi?: boolean;
 			profile?: string;
 			watch: boolean;
 		}) => {
 			await startCommand({
 				binaryPath: options.binary,
 				headless: options.headless,
-				novaUi: options.novaUi,
 				profileName: options.profile,
 				watch: options.watch,
 			});
@@ -98,20 +95,17 @@ program
 	.option("-b, --binary <path>", "Path to Firefox executable")
 	.option("-p, --profile <name>", "Firefox profile name")
 	.option("--headless", "Run in headless mode")
-	.option("--nova-ui", "Enable Firefox Nova UI")
 	.allowUnknownOption()
 	.action(
 		async (options: {
 			profile?: string;
 			binary?: string;
 			headless?: boolean;
-			novaUi?: boolean;
 		}) => {
 			await startMcpServer({
 				profileName: options.profile,
 				binaryPath: options.binary,
 				headless: options.headless,
-				novaUi: options.novaUi,
 			});
 		},
 	);
@@ -125,8 +119,7 @@ async function main(): Promise<void> {
 		scriptBinaryName === "firefox-css-theme-mcp.js"
 	) {
 		const isHeadless = process.argv.includes("--headless");
-		const isNovaUi = process.argv.includes("--nova-ui");
-		await startMcpServer({ headless: isHeadless, novaUi: isNovaUi });
+		await startMcpServer({ headless: isHeadless });
 		return;
 	}
 

@@ -87,7 +87,6 @@ export interface CreateCommandOptions {
 export interface StartCommandOptions {
 	binaryPath?: string;
 	headless?: boolean;
-	novaUi?: boolean;
 	profileName?: string;
 	watch?: boolean;
 }
@@ -102,7 +101,6 @@ export interface McpCommandOptions {
 	profileName?: string;
 	binaryPath?: string;
 	headless?: boolean;
-	novaUi?: boolean;
 }
 
 declare global {

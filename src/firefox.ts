@@ -29,11 +29,9 @@ export class FirefoxManager {
 		binaryPath?: string,
 		profileName?: string,
 		headless?: boolean,
-		novaUi?: boolean,
 	): Promise<void> {
 		if (this.driver) return;
 
-		const isNovaUiEnabled = novaUi ?? process.argv.includes("--nova-ui");
 		const isHeadlessEnabled =
 			headless ?? process.argv.includes("--headless");
 
@@ -50,12 +48,7 @@ export class FirefoxManager {
 				true,
 			)
 			.setPreference("marionette.allow-system-access", true)
-			.setPreference("remote.allow-system-access", true)
-			.setPreference("browser.nova.enabled", isNovaUiEnabled)
-			.setPreference(
-				"browser.newtabpage.activity-stream.nova.enabled",
-				isNovaUiEnabled,
-			);
+			.setPreference("remote.allow-system-access", true);
 
 		if (binaryPath) options.setBinary(binaryPath);
 		if (profileName) {

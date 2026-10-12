@@ -54,13 +54,13 @@ Add the server to your preferred client or development environment:
 #### Claude Code
 
 ```bash
-claude mcp add firefox-css-theme -- npx -y firefox-css-theme mcp --nova-ui
+claude mcp add firefox-css-theme -- npx -y firefox-css-theme mcp
 ```
 
 #### Codex
 
 ```bash
-codex mcp add firefox-css-theme -- npx -y firefox-css-theme mcp --nova-ui
+codex mcp add firefox-css-theme -- npx -y firefox-css-theme mcp
 ```
 
 #### IDE MCP Configuration
@@ -70,7 +70,7 @@ codex mcp add firefox-css-theme -- npx -y firefox-css-theme mcp --nova-ui
 	"mcpServers": {
 		"firefox-css-theme": {
 			"command": "npx",
-			"args": ["-y", "firefox-css-theme", "mcp", "--nova-ui"]
+			"args": ["-y", "firefox-css-theme", "mcp"]
 		}
 	}
 }
@@ -129,7 +129,6 @@ npx firefox-css-theme start [options]
 | `-p, --profile <name>` | Firefox profile name       |
 | `--no-watch`           | Disable file watching      |
 | `--headless`           | Run in headless mode       |
-| `--nova-ui`            | Enable Firefox Nova UI     |
 
 ---
 
@@ -173,4 +172,3 @@ npx firefox-css-theme mcp [options]
 | `-b, --binary <path>`  | Path to Firefox executable |
 | `-p, --profile <name>` | Firefox profile name       |
 | `--headless`           | Run in headless mode       |
-| `--nova-ui`            | Enable Firefox Nova UI     |

@@ -41,12 +41,6 @@ export async function startMcpServer(
 					.boolean()
 					.optional()
 					.describe("Optional flag to run Firefox in headless mode."),
-				novaUi: z
-					.boolean()
-					.optional()
-					.describe(
-						"Optional flag to enable Firefox Nova UI preferences.",
-					),
 			},
 		},
 		async (parameters) => {
@@ -56,7 +50,6 @@ export async function startMcpServer(
 				parameters.binaryPath ?? options.binaryPath,
 				profileName,
 				parameters.headless ?? options.headless,
-				parameters.novaUi ?? options.novaUi,
 			);
 			return {
 				content: [
