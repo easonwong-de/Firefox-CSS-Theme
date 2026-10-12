@@ -24,13 +24,10 @@ jobs:
                   ref: main
                   fetch-depth: 0
                   token: ${{ secrets.GITHUB_TOKEN }}
-            - name: Set up Node.js
-              uses: actions/setup-node@v7
-              with:
-                  node-version: 24
-                  cache: npm
+            - name: Set up Bun
+              uses: oven-sh/setup-bun@v2
             - name: Install dependencies
-              run: npm ci --silent
+              run: bun install --frozen-lockfile
             - name: Bump version and merge pull request
               id: bump
               run: |
@@ -45,14 +42,14 @@ jobs:
                       "github-actions[bot]@users.noreply.github.com"
                   git checkout -b "$BRANCH"
 
-                  npm version "${VERSION}" --no-git-tag-version
+                  bun pm pkg set version="${VERSION}"
                   echo "$(jq --arg v "^${VERSION}" \
                       '.devDependencies["firefox-css-theme"] = $v' \
                       templates/package.json)" > templates/package.json
                   echo "$(jq --arg v "${VERSION}" \
                       '.version = $v | .packages[].version = $v' \
                       server.json)" > server.json
-                  npm run format
+                  bun run format
 
                   git commit -am "chore: bump version to ${VERSION}"
                   git push origin "$BRANCH" --force
@@ -82,14 +79,14 @@ jobs:
               uses: actions/checkout@v7
               with:
                   ref: main
+            - name: Set up Bun
+              uses: oven-sh/setup-bun@v2
             - name: Set up Node.js
               uses: actions/setup-node@v7
               with:
                   node-version: 24
-                  cache: npm
-                  registry-url: "https://registry.npmjs.org"
             - name: Install dependencies
-              run: npm ci --silent
+              run: bun install --frozen-lockfile
             - name: Publish to npm
               run: npm publish --provenance --access public
 
@@ -109,8 +106,8 @@ jobs:
                   OS=$(uname -s | tr '[:upper:]' '[:lower:]')
                   ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
                   ASSET="mcp-publisher_${OS}_${ARCH}.tar.gz"
-                  BASE_URL="https://github.com/modelcontextprotocol"
-                  URL="${BASE_URL}/registry/releases/latest/download/${ASSET}"
+                  REG_URL="https://github.com/modelcontextprotocol"
+                  URL="${REG_URL}/registry/releases/latest/download/${ASSET}"
                   curl -fsSL "$URL" | tar -xz mcp-publisher
                   chmod +x mcp-publisher
             - name: Authenticate via OIDC
@@ -120,8 +117,11 @@ jobs:
             - name: Wait for npm propagation
               run: |
                   VERSION=$(jq -r .version server.json)
-                  for i in {1..12}; do
-                      if [ "$(npm view firefox-css-theme@${VERSION} version 2>/dev/null)" = "${VERSION}" ]; then
+                  for i in {1..30}; do
+                      PKG_VER=$(npm view \
+                          "firefox-css-theme@${VERSION}" \
+                          version --prefer-online 2>/dev/null)
+                      if [ "${PKG_VER}" = "${VERSION}" ]; then
                           sleep 10
                           exit 0
                       fi
@@ -137,7 +137,7 @@ jobs:
                   done
 
     publish-github:
-        needs: [bump, publish-npm]
+        needs: [bump, publish-mcp]
         runs-on: ubuntu-latest
         permissions:
             contents: write

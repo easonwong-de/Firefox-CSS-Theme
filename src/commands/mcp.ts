@@ -229,7 +229,9 @@ export async function startMcpServer(
 			description:
 				"Remove an injected stylesheet from the Firefox window.",
 			inputSchema: {
-				id: z.string().describe("Identifier of the stylesheet to remove."),
+				id: z
+					.string()
+					.describe("Identifier of the stylesheet to remove."),
 				target: z
 					.enum(["chrome", "content"])
 					.describe(

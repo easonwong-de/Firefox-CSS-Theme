@@ -28,6 +28,22 @@ function handleCancellation(value: unknown): void {
 	process.exit(130);
 }
 
+/** Detects the package manager runtime invoked by the user. */
+function detectPackageManager(): "bun" | "pnpm" | "yarn" | "npm" {
+	const userAgent = process.env.npm_config_user_agent;
+	if (userAgent?.startsWith("bun")) return "bun";
+	if (userAgent?.startsWith("pnpm")) return "pnpm";
+	if (userAgent?.startsWith("yarn")) return "yarn";
+	if (userAgent?.startsWith("npm")) return "npm";
+	if (
+		typeof (process.versions as Record<string, string | undefined>).bun ===
+		"string"
+	) {
+		return "bun";
+	}
+	return "npm";
+}
+
 /**
  * Scaffolds a starter stylesheet template file on disk.
  */
@@ -174,9 +190,14 @@ export async function createCommand(
 	}
 
 	if (isInteractive) {
+		const pkgManager = detectPackageManager();
+		const installCmd =
+			pkgManager === "yarn" ? "yarn" : `${pkgManager} install`;
+		const startCmd =
+			pkgManager === "npm" ? "npm run start" : `${pkgManager} start`;
 		const nextSteps = isCurrentDir
-			? "npm install\n  npm run start"
-			: `cd ${chosenThemeName}\n  npm install\n  npm run start`;
+			? `${installCmd}\n  ${startCmd}`
+			: `cd ${chosenThemeName}\n  ${installCmd}\n  ${startCmd}`;
 		outro(
 			`Scaffolded ${pkgName} successfully.\n\nNext steps:\n  ${nextSteps}`,
 		);
