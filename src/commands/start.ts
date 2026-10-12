@@ -139,6 +139,7 @@ export async function startCommand(
 		options.binaryPath,
 		profileName,
 		options.headless,
+		options.toolbox,
 	);
 
 	if (options.watch !== false) {

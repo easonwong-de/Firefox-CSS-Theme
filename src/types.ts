@@ -79,28 +79,28 @@ export interface CssCompilationResult {
 export type CreateStylesheetTarget = "both" | "chrome" | "content";
 
 export interface CreateCommandOptions {
-	force?: boolean;
 	name?: string;
 	target?: CreateStylesheetTarget;
+	force?: boolean;
 }
 
 export interface StartCommandOptions {
 	binaryPath?: string;
-	headless?: boolean;
 	profileName?: string;
+	headless?: boolean;
+	toolbox?: boolean;
 	watch?: boolean;
 }
 
 export interface InstallCommandOptions {
-	force?: boolean;
-	merge?: boolean;
 	profileName?: string;
+	merge?: boolean;
+	force?: boolean;
 }
 
 export interface McpCommandOptions {
-	profileName?: string;
 	binaryPath?: string;
-	headless?: boolean;
+	profileName?: string;
 }
 
 declare global {

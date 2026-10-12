@@ -41,15 +41,32 @@ export async function startMcpServer(
 					.boolean()
 					.optional()
 					.describe("Optional flag to run Firefox in headless mode."),
+				toolbox: z
+					.boolean()
+					.optional()
+					.describe(
+						"Optional flag to open the Browser Toolbox. Defaults to true unless headless.",
+					),
+				noToolbox: z
+					.boolean()
+					.optional()
+					.describe(
+						"Optional flag to disable opening the Browser Toolbox.",
+					),
 			},
 		},
 		async (parameters) => {
 			const profileName = parameters.profileName ?? options.profileName;
+			const toolbox =
+				parameters.noToolbox !== undefined
+					? !parameters.noToolbox
+					: parameters.toolbox;
 
 			await firefoxManager.initialiseBrowser(
 				parameters.binaryPath ?? options.binaryPath,
 				profileName,
-				parameters.headless ?? options.headless,
+				parameters.headless,
+				toolbox,
 			);
 			return {
 				content: [

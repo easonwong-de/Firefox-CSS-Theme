@@ -127,8 +127,9 @@ npx firefox-css-theme start [options]
 | ---------------------- | -------------------------- |
 | `-b, --binary <path>`  | Path to Firefox executable |
 | `-p, --profile <name>` | Firefox profile name       |
-| `--no-watch`           | Disable file watching      |
 | `--headless`           | Run in headless mode       |
+| `--no-toolbox`         | Disable Browser Toolbox    |
+| `--no-watch`           | Disable file watching      |
 
 ---
 
@@ -171,4 +172,3 @@ npx firefox-css-theme mcp [options]
 | ---------------------- | -------------------------- |
 | `-b, --binary <path>`  | Path to Firefox executable |
 | `-p, --profile <name>` | Firefox profile name       |
-| `--headless`           | Run in headless mode       |

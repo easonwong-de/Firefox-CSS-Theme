@@ -29,11 +29,15 @@ export class FirefoxManager {
 		binaryPath?: string,
 		profileName?: string,
 		headless?: boolean,
+		toolbox?: boolean,
 	): Promise<void> {
 		if (this.driver) return;
 
 		const isHeadlessEnabled =
 			headless ?? process.argv.includes("--headless");
+		const isToolboxEnabled =
+			!isHeadlessEnabled &&
+			(toolbox ?? !process.argv.includes("--no-toolbox"));
 
 		const options = new firefox.Options();
 		options.addArguments("-no-remote", "-new-instance");
@@ -68,7 +72,7 @@ export class FirefoxManager {
 				.build();
 
 			await this.ensureChromeContext();
-			if (!isHeadlessEnabled) {
+			if (isToolboxEnabled) {
 				await this.openBrowserToolbox().catch(() => {});
 			}
 		} catch (error) {

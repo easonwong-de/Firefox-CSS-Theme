@@ -32,14 +32,14 @@ program
 		async (
 			name: string | undefined,
 			options: {
-				force?: boolean;
 				target?: "both" | "chrome" | "content";
+				force?: boolean;
 			},
 		) => {
 			await createCommand({
-				force: options.force,
 				name: name,
 				target: options.target,
+				force: options.force,
 			});
 		},
 	);
@@ -51,19 +51,22 @@ program
 	)
 	.option("-b, --binary <path>", "Path to Firefox executable")
 	.option("-p, --profile <name>", "Firefox profile name")
-	.option("--no-watch", "Disable file watching")
 	.option("--headless", "Run in headless mode")
+	.option("--no-toolbox", "Disable Browser Toolbox")
+	.option("--no-watch", "Disable file watching")
 	.action(
 		async (options: {
 			binary?: string;
-			headless?: boolean;
 			profile?: string;
+			headless?: boolean;
+			toolbox: boolean;
 			watch: boolean;
 		}) => {
 			await startCommand({
 				binaryPath: options.binary,
-				headless: options.headless,
 				profileName: options.profile,
+				headless: options.headless,
+				toolbox: options.toolbox,
 				watch: options.watch,
 			});
 		},
@@ -77,14 +80,14 @@ program
 	.option("-f, --force", "Proceed without warning")
 	.action(
 		async (options: {
-			force?: boolean;
-			merge?: boolean;
 			profile?: string;
+			merge?: boolean;
+			force?: boolean;
 		}) => {
 			await installCommand({
-				force: options.force,
-				merge: options.merge,
 				profileName: options.profile,
+				merge: options.merge,
+				force: options.force,
 			});
 		},
 	);
@@ -94,21 +97,13 @@ program
 	.description("Start the Model Context Protocol (MCP) server")
 	.option("-b, --binary <path>", "Path to Firefox executable")
 	.option("-p, --profile <name>", "Firefox profile name")
-	.option("--headless", "Run in headless mode")
 	.allowUnknownOption()
-	.action(
-		async (options: {
-			profile?: string;
-			binary?: string;
-			headless?: boolean;
-		}) => {
-			await startMcpServer({
-				profileName: options.profile,
-				binaryPath: options.binary,
-				headless: options.headless,
-			});
-		},
-	);
+	.action(async (options: { binary?: string; profile?: string }) => {
+		await startMcpServer({
+			binaryPath: options.binary,
+			profileName: options.profile,
+		});
+	});
 
 /** Main CLI entry point for command parsing and execution. */
 async function main(): Promise<void> {
@@ -118,8 +113,7 @@ async function main(): Promise<void> {
 		scriptBinaryName === "firefox-css-theme-mcp" ||
 		scriptBinaryName === "firefox-css-theme-mcp.js"
 	) {
-		const isHeadless = process.argv.includes("--headless");
-		await startMcpServer({ headless: isHeadless });
+		await startMcpServer();
 		return;
 	}
 
