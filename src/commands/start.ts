@@ -177,9 +177,9 @@ export async function startCommand(
 
 	if (options.watch !== false) {
 		await fileWatcher.start();
-		log.info("Live watcher active. Press Ctrl+C to quit.\n");
+		log.info("Live watcher active. Press Ctrl+C to quit.");
 	} else {
-		log.info("Firefox running. Press Ctrl+C to quit.\n");
+		log.info("Firefox running. Press Ctrl+C to quit.");
 	}
 
 	await chromeTarget.onChange();
