@@ -18,7 +18,7 @@ Scaffold a new theme project using `npx`:
 npx firefox-css-theme create
 ```
 
-This interactively prompts for your theme name and stylesheet targets (`userChrome.css`, `userContent.css`, or both).
+This interactively prompts for your theme name and stylesheet targets (`userChrome only`, `userContent only`, or `both`).
 
 If you have already opened a theme repository, launch Firefox with live CSS hot-reloading:
 
@@ -107,7 +107,7 @@ npx firefox-css-theme create [options]
 | Option                  | Description                                 |
 | ----------------------- | ------------------------------------------- |
 | `-n, --name <name>`     | Theme name                                  |
-| `-t, --target <target>` | Stylesheet target: both, chrome, or content |
+| `-t, --target <target>` | Stylesheet target: chrome, content, or both |
 | `-f, --force`           | Proceed without warning                     |
 
 ---

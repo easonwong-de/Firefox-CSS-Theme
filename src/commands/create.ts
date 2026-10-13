@@ -106,27 +106,27 @@ export async function createCommand(
 			message: "Which stylesheet(s) would you like to include?",
 			options: [
 				{
-					value: "both",
-					label: "userChrome.css & userContent.css",
-					hint: "Customise browser chrome and web content",
-				},
-				{
 					value: "chrome",
-					label: "userChrome.css only",
+					label: "userChrome only",
 					hint: "Customise Firefox browser interface",
 				},
 				{
 					value: "content",
-					label: "userContent.css only",
+					label: "userContent only",
 					hint: "Customise web and internal pages",
 				},
+				{
+					value: "both",
+					label: "both",
+					hint: "Customise browser chrome and web content",
+				},
 			],
-			initialValue: "both",
+			initialValue: "chrome",
 		});
 		handleCancellation(stylesheetChoice);
 		chosenTarget = stylesheetChoice as CreateStylesheetTarget;
 	}
-	if (!chosenTarget) chosenTarget = "both";
+	if (!chosenTarget) chosenTarget = "chrome";
 
 	if (existsSync(projectDir)) {
 		const existingEntries = readdirSync(projectDir);

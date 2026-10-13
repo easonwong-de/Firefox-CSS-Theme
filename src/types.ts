@@ -76,7 +76,7 @@ export interface CssCompilationResult {
 	importedFiles: string[];
 }
 
-export type CreateStylesheetTarget = "both" | "chrome" | "content";
+export type CreateStylesheetTarget = "chrome" | "content" | "both";
 
 export interface CreateCommandOptions {
 	name?: string;

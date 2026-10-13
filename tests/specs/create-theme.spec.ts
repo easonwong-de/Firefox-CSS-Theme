@@ -75,6 +75,33 @@ describe("Theme Project Scaffolding", () => {
 			expect(
 				existsSync(path.join(contentOnlyDir, "userContent.css")),
 			).toBe(true);
+
+			const originalIsTTY = process.stdin.isTTY;
+			Object.defineProperty(process.stdin, "isTTY", {
+				value: false,
+				configurable: true,
+			});
+			try {
+				await createCommand({
+					force: true,
+					name: "default-target-theme",
+				});
+				const defaultTargetDir = path.join(
+					baseTempDir,
+					"default-target-theme",
+				);
+				expect(
+					existsSync(path.join(defaultTargetDir, "userChrome.css")),
+				).toBe(true);
+				expect(
+					existsSync(path.join(defaultTargetDir, "userContent.css")),
+				).toBe(false);
+			} finally {
+				Object.defineProperty(process.stdin, "isTTY", {
+					value: originalIsTTY,
+					configurable: true,
+				});
+			}
 		} finally {
 			process.chdir(originalWorkingDir);
 			rmSync(baseTempDir, { force: true, recursive: true });

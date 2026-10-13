@@ -26,13 +26,13 @@ program
 	.option("-n, --name <name>", "Theme name")
 	.option(
 		"-t, --target <target>",
-		"Stylesheet target: both, chrome, or content",
+		"Stylesheet target: chrome, content, or both",
 	)
 	.option("-f, --force", "Proceed without warning")
 	.action(
 		async (options: {
 			name?: string;
-			target?: "both" | "chrome" | "content";
+			target?: "chrome" | "content" | "both";
 			force?: boolean;
 		}) => {
 			await createCommand({
