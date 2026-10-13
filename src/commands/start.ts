@@ -15,7 +15,7 @@ export const ATBC_DOWNLOAD_URL =
 let isShuttingDown = false;
 
 /**
- * Installs the Adaptive Tab Bar Colour add-on into the browser if not already
+ * Installs the Adaptive Tab Bar Colour into the browser if not already
  * installed.
  */
 export async function installAtbcAddon(
@@ -25,16 +25,16 @@ export async function installAtbcAddon(
 		const isInstalled =
 			await firefoxManager.isAddonInstalled(ATBC_ADDON_ID);
 		if (isInstalled) {
-			log.info("Adaptive Tab Bar Colour add-on is already installed.");
+			log.info("Adaptive Tab Bar Colour is already installed.");
 			return;
 		}
 
-		log.step("Installing Adaptive Tab Bar Colour add-on...");
+		log.step("Installing Adaptive Tab Bar Colour...");
 		await firefoxManager.installAddonFromUrl(downloadUrl);
-		log.success("Installed Adaptive Tab Bar Colour add-on.");
+		log.success("Installed Adaptive Tab Bar Colour.");
 	} catch (error) {
 		log.warn(
-			`Failed to install Adaptive Tab Bar Colour add-on: ${error instanceof Error ? error.message : error}`,
+			`Failed to install Adaptive Tab Bar Colour: ${error instanceof Error ? error.message : error}`,
 		);
 	}
 }

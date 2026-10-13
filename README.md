@@ -124,14 +124,14 @@ npx firefox-css-theme start [options]
 
 #### Options
 
-| Option                 | Description                            |
-| ---------------------- | -------------------------------------- |
-| `-b, --binary <path>`  | Path to Firefox executable             |
-| `-p, --profile <name>` | Firefox profile name                   |
-| `--headless`           | Run in headless mode                   |
-| `--atbc`               | Install Adaptive Tab Bar Colour add-on |
-| `--no-toolbox`         | Disable Browser Toolbox                |
-| `--no-watch`           | Disable file watching                  |
+| Option                 | Description                                                                               |
+| ---------------------- | ----------------------------------------------------------------------------------------- |
+| `-b, --binary <path>`  | Path to Firefox executable                                                                |
+| `-p, --profile <name>` | Firefox profile name                                                                      |
+| `--headless`           | Run in headless mode                                                                      |
+| `--atbc`               | Start with [Adaptive Tab Bar Colour](https://github.com/atbc-org/Adaptive-Tab-Bar-Colour) |
+| `--no-toolbox`         | Disable Browser Toolbox                                                                   |
+| `--no-watch`           | Disable file watching                                                                     |
 
 ---
 

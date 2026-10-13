@@ -6,7 +6,7 @@ import {
 } from "../../src/commands/start.js";
 import { firefoxManager } from "../../src/firefox.js";
 
-describe("Adaptive Tab Bar Colour Add-on Installation", () => {
+describe("Adaptive Tab Bar Colour Installation", () => {
 	afterAll(async () => {
 		await firefoxManager.uninstallAddon(ATBC_ADDON_ID).catch(() => {});
 	});
@@ -60,7 +60,7 @@ describe("Adaptive Tab Bar Colour Add-on Installation", () => {
 		const output = result.stdout.toString();
 		expect(output).toContain("--atbc");
 		expect(output).not.toContain("-a, --atbc");
-		expect(output).toContain("Install Adaptive Tab Bar Colour add-on");
+		expect(output).toContain("Start with Adaptive Tab Bar Colour");
 
 		const headlessIndex = output.indexOf("--headless");
 		const atbcIndex = output.indexOf("--atbc");
