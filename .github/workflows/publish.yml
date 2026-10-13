@@ -51,7 +51,9 @@ jobs:
                       server.json)" > server.json
                   bun run format
 
-                  git commit -am "chore: bump version to ${VERSION}"
+                  git commit -a \
+                      -m "chore: bump version to ${VERSION}" \
+                      -m "[skip ci]"
                   git push origin "$BRANCH" --force
 
                   gh pr create --fill || \
