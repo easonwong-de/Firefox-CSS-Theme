@@ -1,12 +1,11 @@
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { describe, expect, test } from "bun:test";
 import { createCommand } from "../../src/commands/create.js";
-import type { TestCase } from "../types.js";
 
-export const testCase: TestCase = {
-	name: "Theme Project Scaffolding",
-	async run({ results }) {
+describe("Theme Project Scaffolding", () => {
+	test("scaffolds theme projects with various targets", async () => {
 		const baseTempDir = mkdtempSync(
 			path.join(os.tmpdir(), "firefox-theme-create-test-"),
 		);
@@ -28,19 +27,11 @@ export const testCase: TestCase = {
 			const chromeCssPath = path.join(themeDir, "userChrome.css");
 			const contentCssPath = path.join(themeDir, "userContent.css");
 
-			if (
-				existsSync(pkgJsonPath) &&
-				existsSync(gitignorePath) &&
-				existsSync(readmePath) &&
-				existsSync(chromeCssPath) &&
-				existsSync(contentCssPath)
-			) {
-				results.pass(
-					"Scaffolded full theme package with both stylesheets",
-				);
-			} else {
-				results.fail("Missing expected files in scaffolded theme");
-			}
+			expect(existsSync(pkgJsonPath)).toBe(true);
+			expect(existsSync(gitignorePath)).toBe(true);
+			expect(existsSync(readmePath)).toBe(true);
+			expect(existsSync(chromeCssPath)).toBe(true);
+			expect(existsSync(contentCssPath)).toBe(true);
 
 			const parsedPkg = JSON.parse(readFileSync(pkgJsonPath, "utf8")) as {
 				devDependencies?: Record<string, string>;
@@ -48,22 +39,14 @@ export const testCase: TestCase = {
 				scripts?: Record<string, string>;
 			};
 
-			if (
-				parsedPkg.name === "test-theme" &&
-				parsedPkg.scripts?.start === "firefox-css-theme start" &&
-				parsedPkg.scripts?.["install:theme"] ===
-					"firefox-css-theme install" &&
-				parsedPkg.devDependencies?.["firefox-css-theme"]
-			) {
-				results.pass(
-					"package.json configured with required scripts and dependency",
-				);
-			} else {
-				results.fail(
-					"package.json contents do not match expected schema",
-					{ parsedPkg: parsedPkg },
-				);
-			}
+			expect(parsedPkg.name).toBe("test-theme");
+			expect(parsedPkg.scripts?.start).toBe("firefox-css-theme start");
+			expect(parsedPkg.scripts?.["install:theme"]).toBe(
+				"firefox-css-theme install",
+			);
+			expect(
+				parsedPkg.devDependencies?.["firefox-css-theme"],
+			).toBeDefined();
 
 			await createCommand({
 				force: true,
@@ -72,14 +55,12 @@ export const testCase: TestCase = {
 			});
 
 			const chromeOnlyDir = path.join(baseTempDir, "chrome-only-theme");
-			if (
-				existsSync(path.join(chromeOnlyDir, "userChrome.css")) &&
-				!existsSync(path.join(chromeOnlyDir, "userContent.css"))
-			) {
-				results.pass("Scaffolded theme with userChrome.css only");
-			} else {
-				results.fail("Stylesheet mismatch for chrome-only target");
-			}
+			expect(existsSync(path.join(chromeOnlyDir, "userChrome.css"))).toBe(
+				true,
+			);
+			expect(
+				existsSync(path.join(chromeOnlyDir, "userContent.css")),
+			).toBe(false);
 
 			await createCommand({
 				force: true,
@@ -88,17 +69,15 @@ export const testCase: TestCase = {
 			});
 
 			const contentOnlyDir = path.join(baseTempDir, "content-only-theme");
-			if (
-				!existsSync(path.join(contentOnlyDir, "userChrome.css")) &&
-				existsSync(path.join(contentOnlyDir, "userContent.css"))
-			) {
-				results.pass("Scaffolded theme with userContent.css only");
-			} else {
-				results.fail("Stylesheet mismatch for content-only target");
-			}
+			expect(
+				existsSync(path.join(contentOnlyDir, "userChrome.css")),
+			).toBe(false);
+			expect(
+				existsSync(path.join(contentOnlyDir, "userContent.css")),
+			).toBe(true);
 		} finally {
 			process.chdir(originalWorkingDir);
 			rmSync(baseTempDir, { force: true, recursive: true });
 		}
-	},
-};
+	});
+});

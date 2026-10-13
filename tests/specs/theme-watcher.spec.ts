@@ -1,14 +1,14 @@
 import { existsSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { setTimeout } from "node:timers/promises";
+import { describe, expect, test } from "bun:test";
+import { firefoxManager } from "../../src/firefox.js";
 import { compileCssFile } from "../../src/processor.js";
 import type { InjectedStyleDetails } from "../../src/types.js";
 import { FileWatcher, type WatchedTarget } from "../../src/watcher.js";
-import type { TestCase } from "../types.js";
-import { sleep } from "../utils.js";
 
-export const testCase: TestCase = {
-	name: "Theme Watcher Lifecycle",
-	async run({ firefoxManager, results }) {
+describe("Theme Watcher Lifecycle", () => {
+	test("handles chrome and content stylesheets lifecycle", async () => {
 		const chromeSrcPath = path.resolve(
 			process.cwd(),
 			".test-userChrome.css",
@@ -78,10 +78,9 @@ export const testCase: TestCase = {
 		watcher.addTarget(contentTarget);
 
 		await watcher.start();
-		await sleep(200);
+		await setTimeout(200);
 
 		try {
-			// Chrome stylesheet lifecycle
 			writeFileSync(
 				chromeSrcPath,
 				`#nav-bar { background-color: ${testColour} !important; }`,
@@ -91,7 +90,7 @@ export const testCase: TestCase = {
 			let isCreatedChromeInjected = false;
 			let activeChromeAfterCreation: InjectedStyleDetails[] = [];
 			for (let attemptIndex = 0; attemptIndex < 40; attemptIndex++) {
-				await sleep(100);
+				await setTimeout(100);
 				activeChromeAfterCreation =
 					await firefoxManager.listChromeStyles();
 				isCreatedChromeInjected = activeChromeAfterCreation.some(
@@ -100,23 +99,14 @@ export const testCase: TestCase = {
 				if (isCreatedChromeInjected) break;
 			}
 
-			if (isCreatedChromeInjected) {
-				results.pass(
-					"Theme watcher compiled and injected newly created chrome stylesheet",
-				);
-			} else {
-				results.fail(
-					"Theme watcher failed to inject newly created chrome stylesheet",
-					activeChromeAfterCreation,
-				);
-			}
+			expect(isCreatedChromeInjected).toBe(true);
 
 			unlinkSync(chromeSrcPath);
 
 			let isDeletedChromePresent = true;
 			let activeChromeAfterDeletion: InjectedStyleDetails[] = [];
 			for (let attemptIndex = 0; attemptIndex < 40; attemptIndex++) {
-				await sleep(100);
+				await setTimeout(100);
 				activeChromeAfterDeletion =
 					await firefoxManager.listChromeStyles();
 				isDeletedChromePresent = activeChromeAfterDeletion.some(
@@ -125,20 +115,10 @@ export const testCase: TestCase = {
 				if (!isDeletedChromePresent) break;
 			}
 
-			if (!isDeletedChromePresent) {
-				results.pass(
-					"Theme watcher gracefully removed disappeared chrome stylesheet",
-				);
-			} else {
-				results.fail(
-					"Theme watcher failed to remove disappeared chrome stylesheet",
-					activeChromeAfterDeletion,
-				);
-			}
+			expect(isDeletedChromePresent).toBe(false);
 
-			await sleep(200);
+			await setTimeout(200);
 
-			// Content stylesheet lifecycle
 			writeFileSync(
 				contentSrcPath,
 				`body { background-color: ${testColour} !important; }`,
@@ -148,7 +128,7 @@ export const testCase: TestCase = {
 			let isCreatedContentInjected = false;
 			let activeContentAfterCreation: InjectedStyleDetails[] = [];
 			for (let attemptIndex = 0; attemptIndex < 40; attemptIndex++) {
-				await sleep(100);
+				await setTimeout(100);
 				activeContentAfterCreation =
 					await firefoxManager.listContentStyles();
 				isCreatedContentInjected = activeContentAfterCreation.some(
@@ -157,23 +137,14 @@ export const testCase: TestCase = {
 				if (isCreatedContentInjected) break;
 			}
 
-			if (isCreatedContentInjected) {
-				results.pass(
-					"Theme watcher compiled and injected newly created content stylesheet",
-				);
-			} else {
-				results.fail(
-					"Theme watcher failed to inject newly created content stylesheet",
-					activeContentAfterCreation,
-				);
-			}
+			expect(isCreatedContentInjected).toBe(true);
 
 			unlinkSync(contentSrcPath);
 
 			let isDeletedContentPresent = true;
 			let activeContentAfterDeletion: InjectedStyleDetails[] = [];
 			for (let attemptIndex = 0; attemptIndex < 40; attemptIndex++) {
-				await sleep(100);
+				await setTimeout(100);
 				activeContentAfterDeletion =
 					await firefoxManager.listContentStyles();
 				isDeletedContentPresent = activeContentAfterDeletion.some(
@@ -182,16 +153,7 @@ export const testCase: TestCase = {
 				if (!isDeletedContentPresent) break;
 			}
 
-			if (!isDeletedContentPresent) {
-				results.pass(
-					"Theme watcher gracefully removed disappeared content stylesheet",
-				);
-			} else {
-				results.fail(
-					"Theme watcher failed to remove disappeared content stylesheet",
-					activeContentAfterDeletion,
-				);
-			}
+			expect(isDeletedContentPresent).toBe(false);
 		} finally {
 			watcher.removeTarget(chromeTarget);
 			watcher.removeTarget(contentTarget);
@@ -203,5 +165,5 @@ export const testCase: TestCase = {
 				unlinkSync(contentSrcPath);
 			}
 		}
-	},
-};
+	});
+});

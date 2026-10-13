@@ -28,7 +28,7 @@
 		"format": "prettier --write --list-different .",
 		"prepublishOnly": "bun run build",
 		"start": "bun dist/cli.js start",
-		"test": "bun tests/run.ts --headless"
+		"test": "bun test"
 	},
 	"dependencies": {
 		"@clack/prompts": "^1.8.1",
@@ -42,6 +42,7 @@
 	},
 	"devDependencies": {
 		"@trivago/prettier-plugin-sort-imports": "^6.0.2",
+		"@types/bun": "^1.4.3",
 		"@types/node": "^26.6.5",
 		"@types/postcss-import": "^14.0.3",
 		"@types/selenium-webdriver": "^4.35.7",

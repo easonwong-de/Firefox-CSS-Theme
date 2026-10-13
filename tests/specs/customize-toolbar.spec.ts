@@ -1,20 +1,14 @@
-import type { TestCase } from "../types.js";
+import { describe, expect, test } from "bun:test";
+import { firefoxManager } from "../../src/firefox.js";
 
-export const testCase: TestCase = {
-	name: "Customise Toolbar Mode",
-	async run({ firefoxManager, results }) {
+describe("Customise Toolbar Mode", () => {
+	test("enters and exits customisation mode", async () => {
 		const enterResult = await firefoxManager.customiseToolbar("enter");
-		if (enterResult.success && enterResult.isCustomising) {
-			results.pass("Entered toolbar customisation mode");
-		} else {
-			results.fail("Failed to enter customisation mode", enterResult);
-		}
+		expect(enterResult.success).toBe(true);
+		expect(enterResult.isCustomising).toBe(true);
 
 		const exitResult = await firefoxManager.customiseToolbar("exit");
-		if (exitResult.success && !exitResult.isCustomising) {
-			results.pass("Exited toolbar customisation mode");
-		} else {
-			results.fail("Failed to exit customisation mode", exitResult);
-		}
-	},
-};
+		expect(exitResult.success).toBe(true);
+		expect(exitResult.isCustomising).toBe(false);
+	});
+});

@@ -1,32 +1,15 @@
-import type { TestCase } from "../types.js";
+import { describe, expect, test } from "bun:test";
+import { firefoxManager } from "../../src/firefox.js";
 
-export const testCase: TestCase = {
-	name: "Get UI Tree",
-	async run({ firefoxManager, results }) {
+describe("Get UI Tree", () => {
+	test("retrieves UI tree hierarchy", async () => {
 		const tree = await firefoxManager.getUiTree("#nav-bar", 2);
 
-		if (tree && typeof tree === "object") {
-			results.pass("Retrieved UI tree root");
-		} else {
-			results.fail("Failed to retrieve UI tree", tree);
-			return;
-		}
-
-		if (tree.id === "nav-bar" && tree.tagName === "toolbar") {
-			results.pass("UI tree root matches target element");
-		} else {
-			results.fail("UI tree root mismatch", {
-				id: tree.id,
-				tagName: tree.tagName,
-			});
-		}
-
-		if (Array.isArray(tree.children) && tree.children.length > 0) {
-			results.pass(
-				`UI tree hierarchy includes ${tree.children.length} child nodes`,
-			);
-		} else {
-			results.fail("UI tree child nodes missing or empty");
-		}
-	},
-};
+		expect(tree).toBeDefined();
+		expect(typeof tree).toBe("object");
+		expect(tree.id).toBe("nav-bar");
+		expect(tree.tagName).toBe("toolbar");
+		expect(Array.isArray(tree.children)).toBe(true);
+		expect(tree.children.length).toBeGreaterThan(0);
+	});
+});

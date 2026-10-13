@@ -22,4 +22,4 @@ jobs:
             - name: Build package
               run: bun run build
             - name: Run tests
-              run: bun run test
+              run: bun test

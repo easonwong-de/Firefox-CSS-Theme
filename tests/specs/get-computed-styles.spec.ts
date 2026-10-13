@@ -1,32 +1,16 @@
-import type { TestCase } from "../types.js";
+import { describe, expect, test } from "bun:test";
+import { firefoxManager } from "../../src/firefox.js";
 
-export const testCase: TestCase = {
-	name: "Get Computed Styles",
-	async run({ firefoxManager, results }) {
+describe("Get Computed Styles", () => {
+	test("retrieves computed styles for element", async () => {
 		const styles = await firefoxManager.getComputedStyles("#nav-bar", [
 			"display",
 			"visibility",
 		]);
 
-		if (styles && typeof styles === "object") {
-			results.pass("Retrieved computed styles object");
-		} else {
-			results.fail("Failed to retrieve computed styles object", styles);
-			return;
-		}
-
-		if (styles["display"]) {
-			results.pass(`Navbar display style resolved: ${styles["display"]}`);
-		} else {
-			results.fail("Navbar display property missing");
-		}
-
-		if (styles["visibility"]) {
-			results.pass(
-				`Navbar visibility style resolved: ${styles["visibility"]}`,
-			);
-		} else {
-			results.fail("Navbar visibility property missing");
-		}
-	},
-};
+		expect(styles).toBeDefined();
+		expect(typeof styles).toBe("object");
+		expect(styles["display"]).toBe("flex");
+		expect(styles["visibility"]).toBe("visible");
+	});
+});

@@ -1,8 +1,8 @@
-import type { TestCase } from "../types.js";
+import { describe, expect, test } from "bun:test";
+import { firefoxManager } from "../../src/firefox.js";
 
-export const testCase: TestCase = {
-	name: "Inject and Remove Styles",
-	async run({ firefoxManager, results }) {
+describe("Inject and Remove Styles", () => {
+	test("injects, verifies, and removes userChrome style", async () => {
 		const chromeId = "spec-test-chrome-style";
 		const chromeColour = "rgb(123, 45, 67)";
 
@@ -10,37 +10,21 @@ export const testCase: TestCase = {
 			`#nav-bar { background-color: ${chromeColour} !important; }`,
 			chromeId,
 		);
-
-		if (chromeInjection.success && chromeInjection.id === chromeId) {
-			results.pass("Live userChrome injected successfully");
-		} else {
-			results.fail("userChrome injection failed", chromeInjection);
-		}
+		expect(chromeInjection.success).toBe(true);
+		expect(chromeInjection.id).toBe(chromeId);
 
 		const updatedStyles = await firefoxManager.getComputedStyles(
 			"#nav-bar",
 			["background-color"],
 		);
-
-		if (updatedStyles["background-color"] === chromeColour) {
-			results.pass(
-				"Injected userChrome updated computed background-color",
-			);
-		} else {
-			results.fail(
-				"Injected userChrome did not apply correctly",
-				`expected: ${chromeColour}, got: ${updatedStyles["background-color"]}`,
-			);
-		}
+		expect(updatedStyles["background-color"]).toBe(chromeColour);
 
 		const chromeRemoval = await firefoxManager.removeChromeStyle(chromeId);
+		expect(chromeRemoval.removed).toBe(true);
+		expect(chromeRemoval.id).toBe(chromeId);
+	});
 
-		if (chromeRemoval.removed && chromeRemoval.id === chromeId) {
-			results.pass("Live userChrome removed successfully");
-		} else {
-			results.fail("userChrome removal failed", chromeRemoval);
-		}
-
+	test("injects, verifies, and removes userContent style", async () => {
 		const contentId = "spec-test-content-style";
 		const contentColour = "rgb(65, 43, 21)";
 		const contentCss = `body { background-color: ${contentColour} !important; }`;
@@ -49,12 +33,8 @@ export const testCase: TestCase = {
 			contentCss,
 			contentId,
 		);
-
-		if (contentInjection.success && contentInjection.id === contentId) {
-			results.pass("Live userContent injected successfully");
-		} else {
-			results.fail("userContent injection failed", contentInjection);
-		}
+		expect(contentInjection.success).toBe(true);
+		expect(contentInjection.id).toBe(contentId);
 
 		const isSheetRegistered =
 			await firefoxManager.executeChromeScript<boolean>((id: string) => {
@@ -70,40 +50,18 @@ export const testCase: TestCase = {
 				const uri = ioService.newURI(uriStr);
 				return sss.sheetRegistered(uri, sss.USER_SHEET);
 			}, contentId);
-
-		if (isSheetRegistered) {
-			results.pass(
-				"userContent style sheet registered with StyleSheetService",
-			);
-		} else {
-			results.fail(
-				"userContent style sheet not registered with StyleSheetService",
-			);
-		}
+		expect(isSheetRegistered).toBe(true);
 
 		const contentRemoval =
 			await firefoxManager.removeContentStyle(contentId);
-		if (contentRemoval.removed && contentRemoval.id === contentId) {
-			results.pass("Live userContent removed successfully");
-		} else {
-			results.fail("userContent removal failed", contentRemoval);
-		}
+		expect(contentRemoval.removed).toBe(true);
+		expect(contentRemoval.id).toBe(contentId);
 
 		const isStillRegistered =
 			await firefoxManager.executeChromeScript<boolean>((id: string) => {
 				const win = window as any;
 				return win.__injectedContentSheets?.has(id) ?? false;
 			}, contentId);
-
-		if (!isStillRegistered) {
-			results.pass(
-				"userContent style sheet unregistered from StyleSheetService",
-			);
-		} else {
-			results.fail(
-				"userContent style sheet was not unregistered",
-				isStillRegistered,
-			);
-		}
-	},
-};
+		expect(isStillRegistered).toBe(false);
+	});
+});

@@ -1,31 +1,15 @@
+import { describe, expect, test } from "bun:test";
 import { getProfileDir, listProfiles } from "../../src/profiles.js";
-import type { TestCase } from "../types.js";
 
-export const testCase: TestCase = {
-	name: "Firefox Profile Discovery and Name Resolution",
-	async run({ results }) {
+describe("Firefox Profile Discovery and Name Resolution", () => {
+	test("detects installed profiles and resolves profile directory", () => {
 		const profiles = listProfiles();
-		if (Array.isArray(profiles)) {
-			results.pass("Detected installed Firefox profiles list");
-		} else {
-			results.fail("Failed to retrieve profiles list", profiles);
-		}
+		expect(Array.isArray(profiles)).toBe(true);
 
 		if (profiles.length > 0) {
 			const firstProfile = profiles[0];
 			const resolvedPath = getProfileDir(firstProfile.name);
-			if (resolvedPath === firstProfile.path) {
-				results.pass("Resolved profile path matches detected path");
-			} else {
-				results.fail("Profile path mismatch upon resolution", {
-					expected: firstProfile.path,
-					resolved: resolvedPath,
-				});
-			}
-		} else {
-			results.pass(
-				"No system profiles present in environment (skipped lookup)",
-			);
+			expect(resolvedPath).toBe(firstProfile.path);
 		}
-	},
-};
+	});
+});

@@ -1,26 +1,17 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { describe, expect, test } from "bun:test";
 import { compileCssFile, compileCssString } from "../../src/processor.js";
-import type { TestCase } from "../types.js";
 
-export const testCase: TestCase = {
-	name: "PostCSS Preprocessing and Import Inlining",
-	async run({ results }) {
+describe("PostCSS Preprocessing and Import Inlining", () => {
+	test("compiles direct CSS string", async () => {
 		const simpleCss = "#nav-bar { display: flex; }";
 		const directResult = await compileCssString(simpleCss);
+		expect(directResult.css.trim()).toBe(simpleCss.trim());
+	});
 
-		if (directResult.css.trim() === simpleCss.trim()) {
-			results.pass(
-				"Direct CSS string compiled and matched input content",
-			);
-		} else {
-			results.fail("Direct CSS string compilation content mismatch", {
-				actual: directResult.css,
-				expected: simpleCss,
-			});
-		}
-
+	test("inlines @import dependency and tracks files", async () => {
 		const tempDir = mkdtempSync(path.join(os.tmpdir(), "postcss-test-"));
 		const partialFilePath = path.join(tempDir, "partial.css");
 		const rootFilePath = path.join(tempDir, "root.css");
@@ -38,30 +29,19 @@ export const testCase: TestCase = {
 			);
 
 			const fileResult = await compileCssFile(rootFilePath);
-
-			if (
-				fileResult.css.includes("--accent-color: #ff0000;") &&
-				fileResult.css.includes("body { color: var(--accent-color); }")
-			) {
-				results.pass("PostCSS successfully inlined @import dependency");
-			} else {
-				results.fail("Failed to inline @import dependency", fileResult);
-			}
-
-			if (
+			expect(fileResult.css.includes("--accent-color: #ff0000;")).toBe(
+				true,
+			);
+			expect(
+				fileResult.css.includes("body { color: var(--accent-color); }"),
+			).toBe(true);
+			expect(
 				fileResult.importedFiles.some((imported) =>
 					imported.endsWith("partial.css"),
-				)
-			) {
-				results.pass("Imported dependencies tracked accurately");
-			} else {
-				results.fail(
-					"Missing dependency in compilation result",
-					fileResult,
-				);
-			}
+				),
+			).toBe(true);
 		} finally {
 			rmSync(tempDir, { force: true, recursive: true });
 		}
-	},
-};
+	});
+});
