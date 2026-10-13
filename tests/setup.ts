@@ -1,5 +1,16 @@
-import { afterAll, beforeAll, jest } from "bun:test";
+import { log } from "@clack/prompts";
+import { afterAll, beforeAll, jest, spyOn } from "bun:test";
 import { firefoxManager } from "../src/firefox.js";
+
+log.message = () => {};
+log.info = () => {};
+log.success = () => {};
+log.step = () => {};
+log.warn = () => {};
+log.error = () => {};
+
+spyOn(process.stdout, "write").mockImplementation(() => true);
+spyOn(console, "log").mockImplementation(() => {});
 
 jest.setTimeout(30000);
 

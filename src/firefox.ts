@@ -563,6 +563,67 @@ export class FirefoxManager {
 		return { base64Image, format: "png" };
 	}
 
+	/**
+	 * Checks whether an add-on is currently installed in the browser session.
+	 */
+	public async isAddonInstalled(id: string): Promise<boolean> {
+		await this.ensureChromeContext();
+
+		return this.executeChromeScript<boolean>(async (addonId: string) => {
+			const { AddonManager } = ChromeUtils.importESModule<{
+				AddonManager: {
+					getAddonByID(targetId: string): Promise<unknown | null>;
+					readyPromise?: Promise<void>;
+				};
+			}>("resource://gre/modules/AddonManager.sys.mjs");
+			if (AddonManager.readyPromise) {
+				await AddonManager.readyPromise;
+			}
+			const addon = await AddonManager.getAddonByID(addonId);
+			return addon !== null && addon !== undefined;
+		}, id);
+	}
+
+	/**
+	 * Installs an add-on into the browser session from a remote URL.
+	 */
+	public async installAddonFromUrl(url: string): Promise<void> {
+		await this.ensureChromeContext();
+
+		await this.executeChromeScript(async (addonUrl: string) => {
+			const { AddonManager } = ChromeUtils.importESModule<{
+				AddonManager: {
+					getInstallForURL(
+						targetUrl: string,
+					): Promise<{ install(): Promise<unknown> }>;
+				};
+			}>("resource://gre/modules/AddonManager.sys.mjs");
+			const install = await AddonManager.getInstallForURL(addonUrl);
+			await install.install();
+		}, url);
+	}
+
+	/**
+	 * Uninstalls an add-on from the browser session by identifier.
+	 */
+	public async uninstallAddon(id: string): Promise<boolean> {
+		await this.ensureChromeContext();
+
+		return this.executeChromeScript<boolean>(async (addonId: string) => {
+			const { AddonManager } = ChromeUtils.importESModule<{
+				AddonManager: {
+					getAddonByID(
+						targetId: string,
+					): Promise<{ uninstall(): Promise<void> } | null>;
+				};
+			}>("resource://gre/modules/AddonManager.sys.mjs");
+			const addon = await AddonManager.getAddonByID(addonId);
+			if (!addon) return false;
+			await addon.uninstall();
+			return true;
+		}, id);
+	}
+
 	/** Launches the Firefox Browser Toolbox developer tools window. */
 	private async openBrowserToolbox(): Promise<BrowserToolboxResult> {
 		await this.ensureChromeContext();

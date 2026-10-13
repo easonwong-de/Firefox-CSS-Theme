@@ -8,7 +8,36 @@ import { ROOT_USER_CHROME_ID, ROOT_USER_CONTENT_ID } from "../registry.js";
 import type { StartCommandOptions, StyleTarget } from "../types.js";
 import { type WatchedTarget, fileWatcher } from "../watcher.js";
 
+export const ATBC_ADDON_ID = "ATBC@EasonWong";
+export const ATBC_DOWNLOAD_URL =
+	"https://addons.mozilla.org/firefox/downloads/latest/adaptive-tab-bar-colour/latest.xpi";
+
 let isShuttingDown = false;
+
+/**
+ * Installs the Adaptive Tab Bar Colour add-on into the browser if not already
+ * installed.
+ */
+export async function installAtbcAddon(
+	downloadUrl: string = ATBC_DOWNLOAD_URL,
+): Promise<void> {
+	try {
+		const isInstalled =
+			await firefoxManager.isAddonInstalled(ATBC_ADDON_ID);
+		if (isInstalled) {
+			log.info("Adaptive Tab Bar Colour add-on is already installed.");
+			return;
+		}
+
+		log.step("Installing Adaptive Tab Bar Colour add-on...");
+		await firefoxManager.installAddonFromUrl(downloadUrl);
+		log.success("Installed Adaptive Tab Bar Colour add-on.");
+	} catch (error) {
+		log.warn(
+			`Failed to install Adaptive Tab Bar Colour add-on: ${error instanceof Error ? error.message : error}`,
+		);
+	}
+}
 
 /**
  * Shuts down the active file watcher, terminates the browser instance, and
@@ -141,6 +170,10 @@ export async function startCommand(
 		options.headless,
 		options.toolbox,
 	);
+
+	if (options.atbc) {
+		await installAtbcAddon();
+	}
 
 	if (options.watch !== false) {
 		await fileWatcher.start();

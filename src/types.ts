@@ -88,6 +88,7 @@ export interface StartCommandOptions {
 	binaryPath?: string;
 	profileName?: string;
 	headless?: boolean;
+	atbc?: boolean;
 	toolbox?: boolean;
 	watch?: boolean;
 }

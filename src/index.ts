@@ -16,6 +16,11 @@ export {
 } from "./profiles.js";
 export { FileWatcher, fileWatcher } from "./watcher.js";
 export { createCommand } from "./commands/create.js";
-export { startCommand } from "./commands/start.js";
+export {
+	ATBC_ADDON_ID,
+	ATBC_DOWNLOAD_URL,
+	installAtbcAddon,
+	startCommand,
+} from "./commands/start.js";
 export { installCommand } from "./commands/install.js";
 export { startMcpServer } from "./commands/mcp.js";

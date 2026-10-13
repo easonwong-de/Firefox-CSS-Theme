@@ -51,6 +51,7 @@ program
 	.option("-b, --binary <path>", "Path to Firefox executable")
 	.option("-p, --profile <name>", "Firefox profile name")
 	.option("--headless", "Run in headless mode")
+	.option("--atbc", "Install Adaptive Tab Bar Colour add-on")
 	.option("--no-toolbox", "Disable Browser Toolbox")
 	.option("--no-watch", "Disable file watching")
 	.action(
@@ -58,6 +59,7 @@ program
 			binary?: string;
 			profile?: string;
 			headless?: boolean;
+			atbc?: boolean;
 			toolbox: boolean;
 			watch: boolean;
 		}) => {
@@ -65,6 +67,7 @@ program
 				binaryPath: options.binary,
 				profileName: options.profile,
 				headless: options.headless,
+				atbc: options.atbc,
 				toolbox: options.toolbox,
 				watch: options.watch,
 			});
