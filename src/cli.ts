@@ -21,23 +21,22 @@ program
 	.version(pkgJson.version, "-v, --version", "Show version number");
 
 program
-	.command("create [name]")
+	.command("create")
 	.description("Scaffold a new Firefox CSS theme project")
+	.option("-n, --name <name>", "Theme name")
 	.option(
 		"-t, --target <target>",
 		"Stylesheet target: both, chrome, or content",
 	)
 	.option("-f, --force", "Proceed without warning")
 	.action(
-		async (
-			name: string | undefined,
-			options: {
-				target?: "both" | "chrome" | "content";
-				force?: boolean;
-			},
-		) => {
+		async (options: {
+			name?: string;
+			target?: "both" | "chrome" | "content";
+			force?: boolean;
+		}) => {
 			await createCommand({
-				name: name,
+				name: options.name,
 				target: options.target,
 				force: options.force,
 			});

@@ -99,13 +99,14 @@ Scaffold a new Firefox CSS theme project.
 #### Usage
 
 ```bash
-npx firefox-css-theme create [name] [options]
+npx firefox-css-theme create [options]
 ```
 
 #### Options
 
 | Option                  | Description                                 |
 | ----------------------- | ------------------------------------------- |
+| `-n, --name <name>`     | Theme name                                  |
 | `-t, --target <target>` | Stylesheet target: both, chrome, or content |
 | `-f, --force`           | Proceed without warning                     |
 

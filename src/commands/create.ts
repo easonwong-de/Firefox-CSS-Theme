@@ -64,9 +64,7 @@ function createStylesheetFile(
 	writeFileSync(resolvedPath, templateContent, "utf8");
 }
 
-/**
- * Scaffolds a minimal Firefox CSS theme npm package with interactive prompts.
- */
+/** Scaffolds a new Firefox CSS theme project. */
 export async function createCommand(
 	options: CreateCommandOptions = {},
 ): Promise<void> {
