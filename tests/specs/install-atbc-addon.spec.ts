@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, test } from "bun:test";
+
 import {
 	ATBC_ADDON_ID,
 	ATBC_DOWNLOAD_URL,

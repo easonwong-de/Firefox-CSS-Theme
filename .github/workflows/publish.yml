@@ -1,160 +1,160 @@
 name: Publish Package
 
 on:
-    workflow_dispatch:
-        inputs:
-            version:
-                description: "Version to publish (e.g. 1.0.0)"
-                required: true
-                type: string
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 1.0.0)"
+        required: true
+        type: string
 
 jobs:
-    bump:
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-            pull-requests: write
-        outputs:
-            tag: ${{ steps.bump.outputs.tag }}
-            version: ${{ steps.bump.outputs.version }}
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v7
-              with:
-                  ref: main
-                  fetch-depth: 0
-                  token: ${{ secrets.GITHUB_TOKEN }}
-            - name: Set up Bun
-              uses: oven-sh/setup-bun@v2
-            - name: Install dependencies
-              run: bun install --frozen-lockfile
-            - name: Bump version and merge pull request
-              id: bump
-              run: |
-                  VERSION="${RAW#v}"
-                  TAG="v${VERSION}"
-                  BRANCH="bump/${VERSION}"
-                  echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-                  echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      tag: ${{ steps.bump.outputs.tag }}
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Bump version and merge pull request
+        id: bump
+        run: |
+          VERSION="${RAW#v}"
+          TAG="v${VERSION}"
+          BRANCH="bump/${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
-                  git config user.name "github-actions[bot]"
-                  git config user.email \
-                      "github-actions[bot]@users.noreply.github.com"
-                  git checkout -b "$BRANCH"
+          git config user.name "github-actions[bot]"
+          git config user.email \
+              "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
 
-                  bun pm pkg set version="${VERSION}"
-                  echo "$(jq --arg v "^${VERSION}" \
-                      '.devDependencies["firefox-css-theme"] = $v' \
-                      templates/package.json)" > templates/package.json
-                  echo "$(jq --arg v "${VERSION}" \
-                      '.version = $v | .packages[].version = $v' \
-                      server.json)" > server.json
-                  bun run format
+          bun pm pkg set version="${VERSION}"
+          echo "$(jq --arg v "^${VERSION}" \
+              '.devDependencies["firefox-css-theme"] = $v' \
+              templates/package.json)" > templates/package.json
+          echo "$(jq --arg v "${VERSION}" \
+              '.version = $v | .packages[].version = $v' \
+              server.json)" > server.json
+          bun run format
 
-                  git commit -a \
-                      -m "chore: bump version to ${VERSION}" \
-                      -m "[skip ci]"
-                  git push origin "$BRANCH" --force
+          git commit -a \
+              -m "chore: bump version to ${VERSION}" \
+              -m "[skip ci]"
+          git push origin "$BRANCH" --force
 
-                  gh pr create --fill || \
-                      gh pr view "$BRANCH" >/dev/null
-                  git checkout main
-                  for i in {1..10}; do
-                      gh pr merge "$BRANCH" \
-                          --merge --delete-branch && break
-                      [ "$i" -eq 10 ] && exit 1
-                      sleep 2
-                  done
-              env:
-                  RAW: ${{ inputs.version }}
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          gh pr create --fill || \
+              gh pr view "$BRANCH" >/dev/null
+          git checkout main
+          for i in {1..10}; do
+              gh pr merge "$BRANCH" \
+                  --merge --delete-branch && break
+              [ "$i" -eq 10 ] && exit 1
+              sleep 2
+          done
+        env:
+          RAW: ${{ inputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    publish-npm:
-        needs: bump
-        runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            id-token: write
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v7
-              with:
-                  ref: main
-            - name: Set up Bun
-              uses: oven-sh/setup-bun@v2
-            - name: Set up Node.js
-              uses: actions/setup-node@v7
-              with:
-                  node-version: 24
-            - name: Install dependencies
-              run: bun install --frozen-lockfile
-            - name: Publish to npm
-              run: npm publish --provenance --access public
+  publish-npm:
+    needs: bump
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: main
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Publish to npm
+        run: npm publish --provenance --access public
 
-    publish-mcp:
-        needs: publish-npm
-        runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            id-token: write
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v7
-              with:
-                  ref: main
-            - name: Install mcp-publisher
-              run: |
-                  OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-                  ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-                  ASSET="mcp-publisher_${OS}_${ARCH}.tar.gz"
-                  REG_URL="https://github.com/modelcontextprotocol"
-                  URL="${REG_URL}/registry/releases/latest/download/${ASSET}"
-                  curl -fsSL "$URL" | tar -xz mcp-publisher
-                  chmod +x mcp-publisher
-            - name: Authenticate via OIDC
-              run: ./mcp-publisher login github-oidc
-            - name: Validate server configuration
-              run: ./mcp-publisher validate server.json
-            - name: Wait for npm propagation
-              run: |
-                  VERSION=$(jq -r .version server.json)
-                  for i in {1..30}; do
-                      PKG_VER=$(npm view \
-                          "firefox-css-theme@${VERSION}" \
-                          version --prefer-online 2>/dev/null || true)
-                      if [ "${PKG_VER}" = "${VERSION}" ]; then
-                          sleep 10
-                          exit 0
-                      fi
-                      sleep 5
-                  done
-                  exit 1
-            - name: Publish to MCP Registry
-              run: |
-                  for i in {1..5}; do
-                      ./mcp-publisher publish && break
-                      [ "$i" -eq 5 ] && exit 1
-                      sleep 15
-                  done
+  publish-mcp:
+    needs: publish-npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: main
+      - name: Install mcp-publisher
+        run: |
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+          ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+          ASSET="mcp-publisher_${OS}_${ARCH}.tar.gz"
+          REG_URL="https://github.com/modelcontextprotocol"
+          URL="${REG_URL}/registry/releases/latest/download/${ASSET}"
+          curl -fsSL "$URL" | tar -xz mcp-publisher
+          chmod +x mcp-publisher
+      - name: Authenticate via OIDC
+        run: ./mcp-publisher login github-oidc
+      - name: Validate server configuration
+        run: ./mcp-publisher validate server.json
+      - name: Wait for npm propagation
+        run: |
+          VERSION=$(jq -r .version server.json)
+          for i in {1..30}; do
+              PKG_VER=$(npm view \
+                  "firefox-css-theme@${VERSION}" \
+                  version --prefer-online 2>/dev/null || true)
+              if [ "${PKG_VER}" = "${VERSION}" ]; then
+                  sleep 10
+                  exit 0
+              fi
+              sleep 5
+          done
+          exit 1
+      - name: Publish to MCP Registry
+        run: |
+          for i in {1..5}; do
+              ./mcp-publisher publish && break
+              [ "$i" -eq 5 ] && exit 1
+              sleep 15
+          done
 
-    publish-github:
-        needs: [bump, publish-mcp]
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v7
-              with:
-                  ref: main
-            - name: Create GitHub release
-              run: |
-                  gh release view "${TAG}" >/dev/null 2>&1 || \
-                      gh release create "${TAG}" \
-                          --target main \
-                          --title "${TAG}" \
-                          --generate-notes
-              env:
-                  TAG: ${{ needs.bump.outputs.tag }}
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  publish-github:
+    needs: [bump, publish-mcp]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: main
+      - name: Create GitHub release
+        run: |
+          gh release view "${TAG}" >/dev/null 2>&1 || \
+              gh release create "${TAG}" \
+                  --target main \
+                  --title "${TAG}" \
+                  --generate-notes
+        env:
+          TAG: ${{ needs.bump.outputs.tag }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

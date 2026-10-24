@@ -1,7 +1,8 @@
+import { describe, expect, test } from "bun:test";
 import { existsSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { setTimeout } from "node:timers/promises";
-import { describe, expect, test } from "bun:test";
+
 import { firefoxManager } from "../../src/firefox.js";
 import { compileCssFile } from "../../src/processor.js";
 import type { InjectedStyleDetails } from "../../src/types.js";

@@ -1,7 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+
 import postcss from "postcss";
 import postcssImport from "postcss-import";
+
 import type { CssCompilationResult } from "./types.js";
 
 /** Compiles a CSS string using PostCSS and inlines @import dependencies. */

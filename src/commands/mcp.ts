@@ -1,7 +1,9 @@
 import { readFileSync } from "node:fs";
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+
 import { firefoxManager } from "../firefox.js";
 import { compileCssString } from "../processor.js";
 import type { McpCommandOptions } from "../types.js";

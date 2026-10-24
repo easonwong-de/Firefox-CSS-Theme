@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+
 import type { StyleTarget } from "./types.js";
 
 export const ROOT_USER_CHROME_ID = "root:userChrome";

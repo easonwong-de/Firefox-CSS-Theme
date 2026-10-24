@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { getProfileDir, listProfiles } from "../../src/profiles.js";
 
 describe("Firefox Profile Discovery and Name Resolution", () => {

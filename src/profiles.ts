@@ -1,7 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+
 import { cancel, isCancel, select } from "@clack/prompts";
+
 import type { ProfileInfo } from "./types.js";
 
 /**

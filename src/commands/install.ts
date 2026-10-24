@@ -1,13 +1,15 @@
 import {
 	existsSync,
 	mkdirSync,
-	readFileSync,
 	readdirSync,
+	readFileSync,
 	rmSync,
 	writeFileSync,
 } from "node:fs";
 import path from "node:path";
+
 import { cancel, confirm, intro, isCancel, log, outro } from "@clack/prompts";
+
 import { compileCssString } from "../processor.js";
 import { getProfileDir, listProfiles, selectProfile } from "../profiles.js";
 import type { InstallCommandOptions } from "../types.js";

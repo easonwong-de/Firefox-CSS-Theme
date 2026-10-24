@@ -25,7 +25,7 @@
 	],
 	"scripts": {
 		"build": "tsc",
-		"format": "prettier --write --list-different .",
+		"format": "bun fmt",
 		"prepublishOnly": "bun run build",
 		"start": "bun dist/cli.js start",
 		"test": "bun test"
@@ -41,13 +41,10 @@
 		"zod": "^4.6.6"
 	},
 	"devDependencies": {
-		"@trivago/prettier-plugin-sort-imports": "^6.0.2",
 		"@types/bun": "^1.4.3",
 		"@types/node": "^26.6.5",
 		"@types/postcss-import": "^14.0.3",
 		"@types/selenium-webdriver": "^4.35.7",
-		"prettier": "^3.9.10",
-		"prettier-plugin-jsdoc": "^1.8.1",
 		"typescript": "^7.0.2"
 	}
 }

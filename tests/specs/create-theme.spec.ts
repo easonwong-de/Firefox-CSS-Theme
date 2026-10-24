@@ -1,7 +1,8 @@
+import { describe, expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, test } from "bun:test";
+
 import { createCommand } from "../../src/commands/create.js";
 
 describe("Theme Project Scaffolding", () => {

@@ -1,7 +1,8 @@
+import { describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, test } from "bun:test";
+
 import { compileCssFile, compileCssString } from "../../src/processor.js";
 
 describe("PostCSS Preprocessing and Import Inlining", () => {

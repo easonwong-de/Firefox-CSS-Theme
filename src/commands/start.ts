@@ -1,12 +1,14 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
+
 import { log } from "@clack/prompts";
+
 import { firefoxManager } from "../firefox.js";
 import { compileCssFile } from "../processor.js";
 import { listProfiles, selectProfile } from "../profiles.js";
 import { ROOT_USER_CHROME_ID, ROOT_USER_CONTENT_ID } from "../registry.js";
 import type { StartCommandOptions, StyleTarget } from "../types.js";
-import { type WatchedTarget, fileWatcher } from "../watcher.js";
+import { fileWatcher, type WatchedTarget } from "../watcher.js";
 
 export const ATBC_ADDON_ID = "ATBC@EasonWong";
 export const ATBC_DOWNLOAD_URL =

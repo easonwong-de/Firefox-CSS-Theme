@@ -1,5 +1,7 @@
-import { log } from "@clack/prompts";
 import { afterAll, beforeAll, jest, spyOn } from "bun:test";
+
+import { log } from "@clack/prompts";
+
 import { firefoxManager } from "../src/firefox.js";
 
 log.message = () => {};

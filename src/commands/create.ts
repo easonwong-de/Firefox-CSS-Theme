@@ -1,12 +1,13 @@
 import {
 	existsSync,
 	mkdirSync,
-	readFileSync,
 	readdirSync,
+	readFileSync,
 	writeFileSync,
 } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
 import {
 	cancel,
 	confirm,
@@ -17,6 +18,7 @@ import {
 	select,
 	text,
 } from "@clack/prompts";
+
 import type { CreateCommandOptions, CreateStylesheetTarget } from "../types.js";
 
 const templateDir = fileURLToPath(new URL("../../templates", import.meta.url));
@@ -44,9 +46,7 @@ function detectPackageManager(): "bun" | "pnpm" | "yarn" | "npm" {
 	return "npm";
 }
 
-/**
- * Scaffolds a starter stylesheet template file on disk.
- */
+/** Scaffolds a starter stylesheet template file on disk. */
 function createStylesheetFile(
 	targetDir: string,
 	relativeFilePath: string,

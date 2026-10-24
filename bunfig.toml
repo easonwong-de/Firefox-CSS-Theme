@@ -1,2 +1,15 @@
 [test]
 preload = ["./tests/setup.ts"]
+
+[fmt]
+endOfLine = "lf"
+objectWrap = "collapse"
+printWidth = 80
+tabWidth = 4
+useTabs = true
+sortImports = true
+jsdoc = true
+
+[[fmt.overrides]]
+files = ["*.yml", "*.yaml"]
+options = { tabWidth = 2, useTabs = false }

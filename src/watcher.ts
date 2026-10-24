@@ -1,4 +1,5 @@
 import path from "node:path";
+
 import { type FSWatcher, watch } from "chokidar";
 
 export type WatchEventType = "add" | "change" | "unlink";

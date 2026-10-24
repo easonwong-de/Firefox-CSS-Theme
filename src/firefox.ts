@@ -1,5 +1,6 @@
 import { Builder, By, type WebDriver } from "selenium-webdriver";
 import * as firefox from "selenium-webdriver/firefox.js";
+
 import { getProfileDir } from "./profiles.js";
 import { styleRegistry } from "./registry.js";
 import type {} from "./selenium-webdriver.d.ts";
@@ -563,9 +564,7 @@ export class FirefoxManager {
 		return { base64Image, format: "png" };
 	}
 
-	/**
-	 * Checks whether an add-on is currently installed in the browser session.
-	 */
+	/** Checks whether an add-on is currently installed in the browser session. */
 	public async isAddonInstalled(id: string): Promise<boolean> {
 		await this.ensureChromeContext();
 
@@ -584,9 +583,7 @@ export class FirefoxManager {
 		}, id);
 	}
 
-	/**
-	 * Installs an add-on into the browser session from a remote URL.
-	 */
+	/** Installs an add-on into the browser session from a remote URL. */
 	public async installAddonFromUrl(url: string): Promise<void> {
 		await this.ensureChromeContext();
 
@@ -603,9 +600,7 @@ export class FirefoxManager {
 		}, url);
 	}
 
-	/**
-	 * Uninstalls an add-on from the browser session by identifier.
-	 */
+	/** Uninstalls an add-on from the browser session by identifier. */
 	public async uninstallAddon(id: string): Promise<boolean> {
 		await this.ensureChromeContext();
 

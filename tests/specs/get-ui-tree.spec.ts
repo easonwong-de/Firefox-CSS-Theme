@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+
 import { firefoxManager } from "../../src/firefox.js";
 
 describe("Get UI Tree", () => {

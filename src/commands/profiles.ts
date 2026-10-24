@@ -1,4 +1,5 @@
 import { log } from "@clack/prompts";
+
 import { listProfiles } from "../profiles.js";
 
 /** Executes the 'profiles' CLI command to list all detected Firefox profiles. */

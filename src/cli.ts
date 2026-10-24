@@ -2,8 +2,10 @@
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
+
 import { log } from "@clack/prompts";
 import { Command } from "commander";
+
 import { createCommand } from "./commands/create.js";
 import { installCommand } from "./commands/install.js";
 import { startMcpServer } from "./commands/mcp.js";
