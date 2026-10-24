@@ -33,7 +33,7 @@
 	"dependencies": {
 		"@clack/prompts": "^1.8.1",
 		"@modelcontextprotocol/sdk": "^1.32.1",
-		"chokidar": "^5.0.0",
+		"chokidar": "^6.0.0",
 		"commander": "^15.0.0",
 		"postcss": "^8.5.29",
 		"postcss-import": "^17.0.0",
