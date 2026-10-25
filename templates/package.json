@@ -8,6 +8,6 @@
 		"install:theme": "firefox-css-theme install"
 	},
 	"devDependencies": {
-		"firefox-css-theme": "^0.3.4"
+		"firefox-css-theme": "^0.3.5"
 	}
 }
